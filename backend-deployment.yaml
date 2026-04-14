@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aidiscussion-server
+  labels:
+    app: aidiscussion-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aidiscussion-server
+  template:
+    metadata:
+      labels:
+        app: aidiscussion-server
+    spec:
+      containers:
+      - name: server
+        image: registry.cn-hangzhou.aliyuncs.com/yoyolab/aichats:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: PORT
+          value: "3000"
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: db
+          mountPath: /app/openchat.db
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      volumes:
+      - name: data
+        hostPath:
+          path: /root/aichats/data
+          type: DirectoryOrCreate
+      - name: db
+        hostPath:
+          path: /root/aichats/openchat.db
+          type: FileOrCreate

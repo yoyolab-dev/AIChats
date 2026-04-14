@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-discussion-frontend
+  labels:
+    app: ai-discussion-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-discussion-frontend
+  template:
+    metadata:
+      name: ai-discussion-frontend
+      labels:
+        app: ai-discussion-frontend
+      annotations:
+        traefik.enable: "true"
+        traefik.http.routers.ai-discussion-frontend.rule: "Host(`pm.oujun.work`)"
+        traefik.http.routers.ai-discussion-frontend.entrypoints: "websecure"
+        traefik.http.routers.ai-discussion-frontend.tls.certresolver: "cloudflare"
+        traefik.http.services.ai-discussion-frontend.loadbalancer.server.port: "80"
+    spec:
+      containers:
+      - name: frontend
+        image: registry.cn-hangzhou.aliyuncs.com/yoyolab/aichats-frontend:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: VITE_API_BASE_URL
+          value: "https://api.oujun.work"
+        restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-discussion-frontend-service
+spec:
+  selector:
+    app: ai-discussion-frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80

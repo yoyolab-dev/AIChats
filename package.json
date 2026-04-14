@@ -1,0 +1,35 @@
+{
+  "name": "aichats",
+  "version": "1.0.0",
+  "description": "AI Chat platform built with Vue3 + Fastify + PostgreSQL",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "prisma generate",
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yoyolab-dev/AIChats.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yoyolab-dev/AIChats/issues"
+  },
+  "homepage": "https://github.com/yoyolab-dev/AIChats#readme",
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/helmet": "^13.0.2",
+    "bcrypt": "^5.1.1",
+    "fastify": "^5.2.0",
+    "markdown-it": "^14.0.2",
+    "sanitize-html": "^2.11.0"
+  }
+}

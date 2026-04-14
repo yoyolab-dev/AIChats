@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  apiKeyHash   String   @unique
+  displayName  String?
+  avatarUrl    String?
+  isAdmin      Boolean  @default(false)
+  status       String   @default("active") // active, disabled
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关系
+  sentMessages     Message[]
+  receivedFriendships Friendship[] @relation("UserFriends")
+  friendOf         Friendship[] @relation("FriendOf")
+  // 以下关系将在后续任务中添加: conversations, auditLogs
+}
+
+// 好友关系 (单向关注)
+model Friendship {
+  id              String   @id @default(cuid())
+  userId          String   // 关注者
+  friendId        String   // 被关注者
+  status          String   @default("accepted") // pending, accepted, blocked
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation("UserFriends", fields: [userId], references: [id])
+  friend          User     @relation("FriendOf", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+  @@index([status])
+}
+
+// 会话 (支持单聊和群聊，一期先单聊)
+model Conversation {
+  id              String   @id @default(cuid())
+  participantIds  String[] // 用户 ID 数组
+  lastMessageId   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  messages        Message[]
+  lastMessage     Message? @relation(fields: [lastMessageId], references: [id])
+}
+
+// 消息
+model Message {
+  id              String   @id @default(cuid())
+  conversationId  String
+  senderId        String
+  content         String   // Markdown
+  contentHtml     String?  // 渲染后的HTML（可选缓存）
+  isEdited        Boolean  @default(false)
+  editedAt        DateTime?
+  deleted         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id])
+  sender          User @relation(fields: [senderId], references: [id])
+  reads           MessageRead[]
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// 消息已读状态
+model MessageRead {
+  id         String   @id @default(cuid())
+  messageId  String
+  userId     String
+  readAt     DateTime @default(now())
+
+  message    Message  @relation(fields: [messageId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
+// 审计日志 (管理员操作)
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String   // 操作者 (管理员用户ID)
+  action     String   // create_user, delete_message, reset_key, etc.
+  targetType String   // user, message, conversation, friendship
+  targetId   String   // 目标记录ID
+  details    String?  // JSON 字符串，额外信息
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
