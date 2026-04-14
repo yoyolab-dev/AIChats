@@ -3,6 +3,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import { prismaPlugin } from './plugins/prisma.js';
 import { authenticate } from './plugins/auth.js';
+import { rateLimitPlugin } from './plugins/rateLimit.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import conversationRoutes from './routes/conversations.js';
@@ -21,7 +22,12 @@ await app.register(fastifyCors, {
 await app.register(fastifyHelmet);
 await app.register(prismaPlugin);
 
-// Public routes (no auth)
+// Rate limiting (does not apply to public routes before auth)
+await app.register(rateLimitPlugin, {
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
+
+// Public routes (no auth required)
 app.register(authRoutes, { prefix: '/api/v1/auth' });
 
 // Protected routes (require authentication)
