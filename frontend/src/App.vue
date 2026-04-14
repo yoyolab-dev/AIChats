@@ -25,6 +25,9 @@ const menuOptions = [
     label: () => h(RouterLink, { to: '/chat' }, { default: () => '聊天' })
   },
   {
+    label: () => h(RouterLink, { to: '/friends' }, { default: () => '好友' })
+  },
+  {
     label: () => h(RouterLink, { to: '/admin' }, { default: () => '管理' })
   }
 ];
