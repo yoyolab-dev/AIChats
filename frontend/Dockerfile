@@ -3,12 +3,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY frontend/admin/package*.json ./
+COPY package*.json ./
 RUN npm install --no-audit --no-fund
 
-COPY frontend/admin .
-ARG VITE_BUILD_VERSION
-ENV VITE_BUILD_VERSION=${VITE_BUILD_VERSION}
+COPY . .
 RUN npm run build
 
 # Production stage
