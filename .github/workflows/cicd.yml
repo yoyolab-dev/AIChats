@@ -1,0 +1,232 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 登录阿里云容器镜像服务
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ALIYUN_REGISTRY }}
+          username: ${{ secrets.ALIYUN_REGISTRY_USER }}
+          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 获取版本号
+        id: version
+        run: |
+          VERSION=$(date +%Y%m%d)-${GITHUB_SHA::8}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 构建并推送后端镜像
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.backend
+          push: true
+          no-cache: true
+          build-args: |
+            NODE_ENV=production
+          tags: |
+            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:latest
+            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:${{ steps.version.outputs.VERSION }}
+
+      - name: 构建并推送前端镜像
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: true
+          no-cache: true
+          tags: |
+            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
+
+      - name: 生成后端部署文件
+        run: |
+          mkdir -p deploy/backend deploy/frontend
+          cat > deploy/backend/deployment.yaml <<EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: aidiscussion-server
+            labels:
+              app: aidiscussion-server
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: aidiscussion-server
+            template:
+              metadata:
+                labels:
+                  app: aidiscussion-server
+              spec:
+                containers:
+                - name: server
+                  image: ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:latest
+                  ports:
+                  - containerPort: 3000
+                    name: http
+                  env:
+                  - name: NODE_ENV
+                    value: production
+                  - name: PORT
+                    value: "3000"
+                  volumeMounts:
+                  - name: data
+                    mountPath: /app/data
+                  - name: db
+                    mountPath: /app/openchat.db
+                  resources:
+                    requests:
+                      memory: "128Mi"
+                      cpu: "250m"
+                    limits:
+                      memory: "256Mi"
+                      cpu: "500m"
+                volumes:
+                - name: data
+                  hostPath:
+                    path: /root/openchat/data
+                    type: DirectoryOrCreate
+                - name: db
+                  hostPath:
+                    path: /root/openchat/openchat.db
+                    type: FileOrCreate
+          EOF
+
+          cat > deploy/backend/service.yaml <<EOF
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: aidiscussion-server-service
+          spec:
+            selector:
+              app: aidiscussion-server
+            ports:
+            - protocol: TCP
+              port: 3000
+              targetPort: 3000
+              name: http
+            type: NodePort
+          EOF
+
+      - name: 生成前端部署文件
+        run: |
+          cat > deploy/frontend/deployment.yaml <<EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ai-discussion-frontend
+            labels:
+              app: ai-discussion-frontend
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: ai-discussion-frontend
+            template:
+              metadata:
+                name: ai-discussion-frontend
+                labels:
+                  app: ai-discussion-frontend
+                annotations:
+                  traefik.enable: "true"
+                  traefik.http.routers.ai-discussion-frontend.rule: "Host(`pm.oujun.work`)"
+                  traefik.http.routers.ai-discussion-frontend.entrypoints: "websecure"
+                  traefik.http.routers.ai-discussion-frontend.tls.certresolver: "cloudflare"
+                  traefik.http.services.ai-discussion-frontend.loadbalancer.server.port: "80"
+              spec:
+                containers:
+                - name: frontend
+                  image: ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
+                  ports:
+                  - containerPort: 80
+                  env:
+                  - name: VITE_API_BASE_URL
+                    value: "https://api.oujun.work"
+                  restartPolicy: Always
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ai-discussion-frontend-service
+          spec:
+            selector:
+              app: ai-discussion-frontend
+            ports:
+            - protocol: TCP
+              port: 80
+              targetPort: 80
+          EOF
+
+      - name: 上传部署文件
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-deployment
+          path: deploy/backend/
+      - name: 上传前端部署文件
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-deployment
+          path: deploy/frontend/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: 下载后端部署文件
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-deployment
+      - name: 下载前端部署文件
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-deployment
+
+      - name: 配置 SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+      - name: 上传并部署后端
+        run: |
+          scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} backend-deployment/*.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
+            set -e
+            cd /root
+            podman kube play --replace deployment.yaml
+            podman kube play --replace service.yaml
+            echo "Backend deployed"
+          EOF
+
+      - name: 上传并部署前端
+        run: |
+          scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} frontend-deployment/deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
+            set -e
+            cd /root
+            podman kube play --replace deployment.yaml
+            echo "Frontend deployed"
+          EOF
+
+      - name: 清理本地 SSH 密钥
+        if: always()
+        run: rm -rf ~/.ssh/id_rsa ~/.ssh/config
