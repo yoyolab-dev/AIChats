@@ -1,35 +1,70 @@
 <template>
-  <div>
-    <h2>会话列表</h2>
-    <n-list hoverable clickable>
-      <n-list-item v-for="conv in conversations" :key="conv.id">
-        <n-thing :title="conv.id" :description="`参与者: ${conv.participantIds.join(', ')}`" />
-      </n-list-item>
-    </n-list>
-    <div v-if="currentConversation">
-      <h3>当前会话: {{ currentConversation.id }}</h3>
-      <div v-for="msg in messages" :key="msg.id">
-        <strong>{{ msg.sender.username }}:</strong>
-        <div v-html="msg.contentHtml"></div>
-      </div>
-      <n-input v-model:value="newMessage" type="textarea" placeholder="输入 Markdown 消息" />
-      <n-button type="primary" @click="sendMessage">发送</n-button>
-    </div>
-  </div>
+  <n-space vertical style="height: 90vh">
+    <n-space v-if="!currentConversation" vertical>
+      <n-button @click="createConversation">新建会话</n-button>
+      <n-list hoverable clickable>
+        <n-list-item v-for="conv in conversations" :key="conv.id" @click="selectConversation(conv)">
+          <n-thing :title="conv.id" :description="lastMessagePreview(conv)" />
+        </n-list-item>
+      </n-list>
+    </n-space>
+
+    <n-space v-else vertical style="height: 100%; width: 100%">
+      <n-space align="center">
+        <n-button @click="currentConversation = null">返回</n-button>
+        <h3>会话: {{ currentConversation.id }}</h3>
+      </n-space>
+
+      <n-scrollbar style="max-height: 60vh; overflow-y: auto">
+        <n-space vertical>
+          <div v-for="msg in messages" :key="msg.id" style="margin-bottom: 8px">
+            <strong>{{ msg.sender?.username || 'Unknown' }}:</strong>
+            <div v-html="msg.contentHtml" style="margin-left: 8px"></div>
+            <n-text depth="3" style="font-size: 12px">{{ formatTime(msg.createdAt) }}</n-text>
+          </div>
+        </n-space>
+      </n-scrollbar>
+
+      <n-input
+        v-model:value="newMessage"
+        type="textarea"
+        placeholder="输入 Markdown 消息"
+        :autosize="{ minRows: 2, maxRows: 4 }"
+      />
+      <n-button type="primary" @click="sendMessage" :disabled="!newMessage.trim()">发送</n-button>
+    </n-space>
+  </n-space>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import axios from '@/utils/axios.js';
+import { useMessage } from 'naive-ui';
 
+const message = useMessage();
 const conversations = ref([]);
-const messages = ref([]);
 const currentConversation = ref(null);
+const messages = ref([]);
 const newMessage = ref('');
 
 async function loadConversations() {
   const res = await axios.get('/api/v1/conversations');
   if (res.data.success) conversations.value = res.data.data;
+}
+
+async function createConversation() {
+  // For now, create a conversation with no participants (just self)
+  // In real use, you'd select friends
+  const res = await axios.post('/api/v1/conversations', { participantIds: [] });
+  if (res.data.success) {
+    await loadConversations();
+    message.success('会话创建成功');
+  }
+}
+
+async function selectConversation(conv) {
+  currentConversation.value = conv;
+  await loadMessages(conv.id);
 }
 
 async function loadMessages(convId) {
@@ -44,6 +79,16 @@ async function sendMessage() {
   });
   newMessage.value = '';
   await loadMessages(currentConversation.value.id);
+  await loadConversations(); // update last message preview
+}
+
+function lastMessagePreview(conv) {
+  // conv.lastMessage may be null; find from messages if needed
+  return '点击查看消息';
+}
+
+function formatTime(ts) {
+  return new Date(ts).toLocaleString();
 }
 
 onMounted(() => {
