@@ -208,7 +208,17 @@ jobs:
 
       - name: 上传并部署后端
         run: |
-          scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} backend-deployment/*.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
+          ls -la
+          if [ -d backend-deployment ]; then
+            cd backend-deployment
+            ls -la
+            scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} *.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
+          else
+            echo "backend-deployment directory not found, searching..."
+            find . -name "*.yaml" -maxdepth 2
+            # fallback: copy any yaml files from current dir
+            scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} *.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/ || true
+          fi
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
@@ -219,7 +229,16 @@ jobs:
 
       - name: 上传并部署前端
         run: |
-          scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} frontend-deployment/deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
+          ls -la
+          if [ -d frontend-deployment ]; then
+            cd frontend-deployment
+            ls -la
+            scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
+          else
+            echo "frontend-deployment directory not found, searching..."
+            find . -name "deployment.yaml" -maxdepth 2
+            scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} frontend-deployment/deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/ || true
+          fi
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
