@@ -3,13 +3,13 @@ FROM node:18-bullseye AS builder
 
 WORKDIR /app
 
-# Install build dependencies (for native modules like bcrypt)
+# Install build dependencies
 RUN apt-get update && apt-get install -y python3 make g++ build-essential && rm -rf /var/lib/apt/lists/*
 
 # Copy root dependency files
 COPY package*.json ./
 
-# Install dependencies (including dev for prisma generate)
+# Install dependencies (including dev)
 RUN npm config set fund false && \
     npm config set audit false && \
     npm config set legacy-peer-deps true && \
@@ -18,9 +18,8 @@ RUN npm config set fund false && \
 # Copy source code
 COPY . .
 
-# Generate Prisma Client
-ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/aichats?schema=public"
-RUN npx prisma generate
+# Generate Prisma Client explicitly with schema path
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Production stage
 FROM node:18-bullseye
