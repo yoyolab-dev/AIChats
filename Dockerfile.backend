@@ -6,17 +6,23 @@ WORKDIR /app
 # Install build dependencies
 RUN apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*
 
-# Copy Prisma schema first so postinstall of @prisma/client can generate client
+# Copy Prisma schema first for later generation
 COPY prisma ./prisma
 
 # Copy root dependency files
 COPY package*.json ./
 
-# Allow running install scripts as root (some packages need it)
+# Set unsafe perm for npm install scripts that need root (some native modules)
 ENV npm_config_unsafe_perm=true
 
-# Install dependencies (including dev). Postinstall of @prisma/client will run prisma generate.
-RUN npm ci --no-audit --no-fund
+# Install dependencies including dev (but we'll generate manually), ignore scripts to avoid postinstall
+RUN npm ci --no-audit --no-fund --ignore-scripts
+
+# Install production dependencies strictly (with scripts) if needed? Actually we'll generate later and include both dev+prod for build? 
+# For production, we just need node_modules with all packages. We already installed dev deps (with scripts ignored). Now generate Prisma client.
+
+# Generate Prisma client explicitly
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Copy remaining source code
 COPY . .
@@ -26,7 +32,7 @@ FROM node:18-bullseye
 
 WORKDIR /app
 
-# Copy production files
+# Copy production files (we will include entire node_modules which has dev dependencies; that's okay)
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src
