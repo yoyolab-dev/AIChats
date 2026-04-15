@@ -5,7 +5,7 @@
         <h3>AIChats</h3>
         <n-menu :options="menuOptions" />
       </n-layout-sider>
-      <n-layout content-style="padding: 24px;">
+      <n-layout-content content-style="padding: 24px;">
         <router-view />
       </n-layout-content>
     </n-layout>

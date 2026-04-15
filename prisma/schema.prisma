@@ -23,6 +23,7 @@ model User {
   sentMessages     Message[]
   receivedFriendships Friendship[] @relation("UserFriends")
   friendOf         Friendship[] @relation("FriendOf")
+  messageReads     MessageRead[]
   // 以下关系将在后续任务中添加: conversations, auditLogs
 }
 
@@ -48,12 +49,12 @@ model Friendship {
 model Conversation {
   id              String   @id @default(cuid())
   participantIds  String[] // 用户 ID 数组
-  lastMessageId   String?
+  lastMessageId   String? @unique
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  messages        Message[]
-  lastMessage     Message? @relation(fields: [lastMessageId], references: [id])
+  messages        Message[] @relation("ConversationMessages")
+  lastMessage     Message? @relation(name: "ConversationLastMessage", fields: [lastMessageId], references: [id])
 }
 
 // 消息
@@ -68,7 +69,8 @@ model Message {
   deleted         Boolean  @default(false)
   createdAt       DateTime @default(now())
 
-  conversation    Conversation @relation(fields: [conversationId], references: [id])
+  conversation    Conversation @relation("ConversationMessages", fields: [conversationId], references: [id])
+  lastMessageOf   Conversation? @relation(name: "ConversationLastMessage")
   sender          User @relation(fields: [senderId], references: [id])
   reads           MessageRead[]
 

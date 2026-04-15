@@ -24,8 +24,12 @@
   },
   "homepage": "https://github.com/yoyolab-dev/AIChats#readme",
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
     "@jest/globals": "^30.3.0",
+    "@vitejs/plugin-vue": "^5.2.4",
     "@vue/test-utils": "^2.4.6",
+    "babel-jest": "^30.3.0",
     "jest": "^30.3.0",
     "jsdom": "^29.0.2",
     "prisma": "^5.22.0",
