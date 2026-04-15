@@ -18,7 +18,8 @@ RUN npm config set fund false && \
 # Copy source code (backend only)
 COPY . .
 
-# Generate Prisma Client
+# Generate Prisma Client (needs DATABASE_URL env set)
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/aichats?schema=public"
 RUN npx prisma generate
 
 # Production stage
