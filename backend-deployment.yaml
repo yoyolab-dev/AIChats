@@ -34,12 +34,12 @@ spec:
           traefik.http.routers.aichats-backend.rule: "Host(`api.oujun.work`)"
           traefik.http.routers.aichats-backend.entrypoints: "websecure"
           traefik.http.routers.aichats-backend.tls.certresolver: "cloudflare"
-          traefik.http.services.aichats-backend.loadbalancer.server.port: "3000"
+          traefik.http.services.aichats-backend.loadbalancer.server.port: "8200"
         env:
         - name: NODE_ENV
           value: production
         - name: PORT
-          value: "3000"
+          value: "8200"
         - name: DATABASE_URL
           value: "postgresql://openchat:pg-password@localhost:5432/openchat"
         command: ["sh", "-c"]
