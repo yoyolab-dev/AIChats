@@ -18,6 +18,9 @@ RUN npm config set fund false && \
 # Copy source code (backend only)
 COPY . .
 
+# Generate Prisma Client
+RUN npx prisma generate
+
 # Production stage
 FROM node:18-alpine
 
