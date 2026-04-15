@@ -6,16 +6,19 @@ WORKDIR /app
 # Install build dependencies
 RUN apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*
 
+# Copy Prisma schema first so postinstall of @prisma/client can generate client
+COPY prisma ./prisma
+
 # Copy root dependency files
 COPY package*.json ./
 
-# Install dependencies (including dev, postinstall of @prisma/client will generate client)
-RUN npm config set fund false && \
-    npm config set audit false && \
-    npm config set legacy-peer-deps true && \
-    npm ci --no-audit --no-fund
+# Allow running install scripts as root (some packages need it)
+ENV npm_config_unsafe_perm=true
 
-# Copy source code
+# Install dependencies (including dev). Postinstall of @prisma/client will run prisma generate.
+RUN npm ci --no-audit --no-fund
+
+# Copy remaining source code
 COPY . .
 
 # Production stage
