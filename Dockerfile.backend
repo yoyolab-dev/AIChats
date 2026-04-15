@@ -1,15 +1,15 @@
-# Build stage for backend only
-FROM node:18-slim AS builder
+# Build stage for backend
+FROM node:18-bullseye AS builder
 
 WORKDIR /app
 
-# Install build dependencies (for native modules)
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# Install build dependencies (for native modules like bcrypt)
+RUN apt-get update && apt-get install -y python3 make g++ build-essential && rm -rf /var/lib/apt/lists/*
 
 # Copy root dependency files
 COPY package*.json ./
 
-# Install all dependencies (including dev for building)
+# Install dependencies (including dev for prisma generate)
 RUN npm config set fund false && \
     npm config set audit false && \
     npm config set legacy-peer-deps true && \
@@ -18,17 +18,14 @@ RUN npm config set fund false && \
 # Copy source code
 COPY . .
 
-# Prisma generate (client already in node_modules; this generates if not present)
+# Generate Prisma Client
 ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/aichats?schema=public"
 RUN npx prisma generate
 
 # Production stage
-FROM node:18-slim
+FROM node:18-bullseye
 
 WORKDIR /app
-
-# If sqlite is needed at runtime, install it
-RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
 # Copy production files
 COPY --from=builder /app/package*.json ./
