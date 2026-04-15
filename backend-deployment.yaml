@@ -15,7 +15,7 @@ spec:
         app: aidiscussion-server
       annotations:
         traefik.enable: "true"
-        traefik.http.routers.aichats-backend.rule: "Host(`api.oujun.work`)"
+        traefik.http.routers.aichats-backend.rule: "Host('api.oujun.work')"
         traefik.http.routers.aichats-backend.entrypoints: "websecure"
         traefik.http.routers.aichats-backend.tls.certresolver: "cloudflare"
         traefik.http.services.aichats-backend.loadbalancer.server.port: "3000"
@@ -23,9 +23,6 @@ spec:
       containers:
       - name: server
         image: aidiscussion:latest
-        ports:
-        - containerPort: 3000
-          name: http
         env:
         - name: NODE_ENV
           value: production

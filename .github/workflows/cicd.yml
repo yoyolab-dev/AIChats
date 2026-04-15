@@ -54,124 +54,11 @@ jobs:
           tags: |
             ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
 
-      - name: 生成后端部署文件
+      - name: Prepare deployment manifests
         run: |
           mkdir -p deploy/backend deploy/frontend
-          cat > deploy/backend/deployment.yaml <<EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: aidiscussion-server
-            labels:
-              app: aidiscussion-server
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app: aidiscussion-server
-            template:
-              metadata:
-                labels:
-                  app: aidiscussion-server
-              spec:
-                containers:
-                - name: server
-                  image: ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:latest
-                  ports:
-                  - containerPort: 3000
-                    name: http
-                  env:
-                  - name: NODE_ENV
-                    value: production
-                  - name: PORT
-                    value: "3000"
-                  volumeMounts:
-                  - name: data
-                    mountPath: /app/data
-                  - name: db
-                    mountPath: /app/openchat.db
-                  resources:
-                    requests:
-                      memory: "128Mi"
-                      cpu: "250m"
-                    limits:
-                      memory: "256Mi"
-                      cpu: "500m"
-                volumes:
-                - name: data
-                  hostPath:
-                    path: /root/openchat/data
-                    type: DirectoryOrCreate
-                - name: db
-                  hostPath:
-                    path: /root/openchat/openchat.db
-                    type: FileOrCreate
-          EOF
-
-          cat > deploy/backend/service.yaml <<EOF
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: aidiscussion-server-service
-          spec:
-            selector:
-              app: aidiscussion-server
-            ports:
-            - protocol: TCP
-              port: 3000
-              targetPort: 3000
-              name: http
-            type: NodePort
-          EOF
-
-      - name: 生成前端部署文件
-        run: |
-          cat > deploy/frontend/deployment.yaml <<EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: ai-discussion-frontend
-            labels:
-              app: ai-discussion-frontend
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app: ai-discussion-frontend
-            template:
-              metadata:
-                name: ai-discussion-frontend
-                labels:
-                  app: ai-discussion-frontend
-                annotations:
-                  traefik.enable: "true"
-                  traefik.http.routers.ai-discussion-frontend.rule: "Host(`pm.oujun.work`)"
-                  traefik.http.routers.ai-discussion-frontend.entrypoints: "websecure"
-                  traefik.http.routers.ai-discussion-frontend.tls.certresolver: "cloudflare"
-                  traefik.http.services.ai-discussion-frontend.loadbalancer.server.port: "80"
-              spec:
-                containers:
-                - name: frontend
-                  image: ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
-                  ports:
-                  - containerPort: 80
-                  env:
-                  - name: VITE_API_BASE_URL
-                    value: "https://api.oujun.work"
-                  restartPolicy: Always
-          ---
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: ai-discussion-frontend-service
-          spec:
-            selector:
-              app: ai-discussion-frontend
-            ports:
-            - protocol: TCP
-              port: 80
-              targetPort: 80
-          EOF
+          cp backend-deployment.yaml deploy/backend/
+          cp frontend-deployment.yaml deploy/frontend/
 
       - name: 上传部署文件
         uses: actions/upload-artifact@v4
@@ -223,7 +110,6 @@ jobs:
             set -e
             cd /root
             podman kube play --replace deployment.yaml
-            podman kube play --replace service.yaml
             echo "Backend deployed"
           EOF
 
