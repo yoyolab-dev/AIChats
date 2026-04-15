@@ -15,12 +15,24 @@ spec:
         app: aidiscussion-server
       annotations:
         traefik.enable: "true"
-        traefik.http.routers.aichats-backend.rule: "Host('api.oujun.work')"
+        traefik.http.routers.aichats-backend.rule: "Host(`api.oujun.work`)"
         traefik.http.routers.aichats-backend.entrypoints: "websecure"
         traefik.http.routers.aichats-backend.tls.certresolver: "cloudflare"
         traefik.http.services.aichats-backend.loadbalancer.server.port: "3000"
     spec:
       containers:
+      - name: postgres
+        image: postgres:15
+        env:
+        - name: POSTGRES_PASSWORD
+          value: "pg-password"
+        - name: POSTGRES_DB
+          value: "openchat"
+        - name: POSTGRES_USER
+          value: "openchat"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
       - name: server
         image: aidiscussion:latest
         env:
@@ -29,14 +41,9 @@ spec:
         - name: PORT
           value: "3000"
         - name: DATABASE_URL
-          value: "file:/app/openchat.db"
+          value: "postgresql://openchat:pg-password@localhost:5432/openchat"
         command: ["sh", "-c"]
         args: ["npx prisma db push && node src/server.js"]
-        volumeMounts:
-        - name: data
-          mountPath: /app/data
-        - name: db
-          mountPath: /app/openchat.db
         resources:
           requests:
             memory: "128Mi"
@@ -45,11 +52,7 @@ spec:
             memory: "256Mi"
             cpu: "500m"
       volumes:
-      - name: data
+      - name: postgres-data
         hostPath:
-          path: /root/openchat/data
+          path: /root/openchat/postgres-data
           type: DirectoryOrCreate
-      - name: db
-        hostPath:
-          path: /root/openchat/openchat.db
-          type: FileOrCreate
