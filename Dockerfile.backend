@@ -1,35 +1,37 @@
-# Build stage
+# Build stage for backend only
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies (for any native modules like sqlite3)
+# Install build dependencies (for native modules like sqlite3)
 RUN apk add --no-cache python3 make g++
 
+# Copy root dependency files
 COPY package*.json ./
-RUN npm install --no-audit --no-fund --legacy-peer-deps
 
-# Build admin frontend
-COPY frontend/admin/package*.json ./frontend/admin/
-RUN cd frontend/admin && npm install --no-audit --no-fund
-COPY frontend/admin ./frontend/admin
-RUN cd frontend/admin && npm run build
+# Install all dependencies (including dev for building if needed)
+RUN npm config set fund false && \
+    npm config set audit false && \
+    npm config set legacy-peer-deps true && \
+    npm ci --no-audit --no-fund
+
+# Copy source code (backend only)
+COPY . .
 
 # Production stage
 FROM node:18-alpine
 
 WORKDIR /app
 
+# Runtime dependencies
 RUN apk add --no-cache sqlite
 
-# Copy production dependencies
+# Copy production files
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/.env.example ./.env
-# Copy built admin frontend
-COPY --from=builder /app/frontend/admin/dist ./frontend/admin/dist
 
 ENV NODE_ENV=production
 ENV PORT=3000
