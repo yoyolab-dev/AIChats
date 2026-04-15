@@ -1,34 +1,34 @@
 # Build stage for backend only
-FROM node:18-alpine AS builder
+FROM node:18-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies (for native modules like sqlite3)
-RUN apk add --no-cache python3 make g++
+# Install build dependencies (for native modules)
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # Copy root dependency files
 COPY package*.json ./
 
-# Install all dependencies (including dev for building if needed)
+# Install all dependencies (including dev for building)
 RUN npm config set fund false && \
     npm config set audit false && \
     npm config set legacy-peer-deps true && \
     npm ci --no-audit --no-fund
 
-# Copy source code (backend only)
+# Copy source code
 COPY . .
 
-# Generate Prisma Client (needs DATABASE_URL env set)
+# Prisma generate (client already in node_modules; this generates if not present)
 ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/aichats?schema=public"
 RUN npx prisma generate
 
 # Production stage
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
-# Runtime dependencies
-RUN apk add --no-cache sqlite
+# If sqlite is needed at runtime, install it
+RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
 # Copy production files
 COPY --from=builder /app/package*.json ./
