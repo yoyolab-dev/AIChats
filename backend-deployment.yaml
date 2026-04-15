@@ -13,16 +13,10 @@ spec:
     metadata:
       labels:
         app: aidiscussion-server
-      annotations:
-        traefik.enable: "true"
-        traefik.http.routers.aichats-backend.rule: "Host(`api.oujun.work`)"
-        traefik.http.routers.aichats-backend.entrypoints: "websecure"
-        traefik.http.routers.aichats-backend.tls.certresolver: "cloudflare"
-        traefik.http.services.aichats-backend.loadbalancer.server.port: "3000"
     spec:
       containers:
       - name: postgres
-        image: postgres:15
+        image: docker.io/library/postgres:15
         env:
         - name: POSTGRES_PASSWORD
           value: "pg-password"
@@ -35,6 +29,12 @@ spec:
           mountPath: /var/lib/postgresql/data
       - name: server
         image: aidiscussion:latest
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.aichats-backend.rule: "Host(`api.oujun.work`)"
+          traefik.http.routers.aichats-backend.entrypoints: "websecure"
+          traefik.http.routers.aichats-backend.tls.certresolver: "cloudflare"
+          traefik.http.services.aichats-backend.loadbalancer.server.port: "3000"
         env:
         - name: NODE_ENV
           value: production

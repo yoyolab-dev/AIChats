@@ -24,6 +24,12 @@ spec:
       containers:
       - name: frontend
         image: ai-discussion-frontend:latest
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.ai-discussion-frontend.rule: "Host(`pm.oujun.work`)"
+          traefik.http.routers.ai-discussion-frontend.entrypoints: "websecure"
+          traefik.http.routers.ai-discussion-frontend.tls.certresolver: "cloudflare"
+          traefik.http.services.ai-discussion-frontend.loadbalancer.server.port: "80"
         env:
         - name: VITE_API_BASE_URL
           value: "https://api.oujun.work"

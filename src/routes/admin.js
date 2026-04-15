@@ -78,7 +78,7 @@ router.get('/messages', async (request, reply) => {
   if (conversationId) where.conversationId = conversationId;
   if (keyword) {
     // Simple text search on content
-    where.content = { contains: keyword as string, mode: 'insensitive' };
+    where.content = { contains: keyword, mode: 'insensitive' };
   }
 
   const messages = await request.prisma.message.findMany({
