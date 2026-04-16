@@ -88,12 +88,12 @@ describe('User Self API', () => {
         .set('Authorization', `Bearer ${userKey}`)
         .expect(200);
       expect(res.body.data.deleted).toBe(true);
-      // Verify status is disabled
+      // After deletion, token should be invalid
       const get = await request(server)
         .get(`/api/v1/users/${userId}`)
         .set('Authorization', `Bearer ${userKey}`)
-        .expect(200);
-      expect(get.body.data.status).toBe('disabled');
+        .expect(401);
+      expect(get.body.success).toBe(false);
     });
 
     it('forbids deleting other users', async () => {
