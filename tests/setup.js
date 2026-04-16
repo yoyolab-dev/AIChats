@@ -6,13 +6,16 @@ if (!dbUrl) {
   throw new Error('TEST_DATABASE_URL environment variable must be set for running tests');
 }
 export const prisma = new PrismaClient({ datasourceUrl: dbUrl });
-export { app };
+
+let server = null;
 
 beforeAll(async () => {
   await prisma.$connect();
+  server = await app.listen({ port: 0, host: '127.0.0.1' });
 });
 
 afterAll(async () => {
+  await server.close();
   await prisma.$disconnect();
 });
 
@@ -24,3 +27,5 @@ beforeEach(async () => {
   await prisma.user.deleteMany();
   await prisma.auditLog.deleteMany();
 });
+
+export { server };
