@@ -50,8 +50,13 @@ jobs:
           NODE_ENV: test
         run: npm test
 
+      - name: 安装前端依赖
+        working-directory: ./frontend
+        run: npm ci
+
       - name: 运行前端单元测试 (Vitest)
-        run: npm run test:frontend
+        working-directory: ./frontend
+        run: npm test
 
       - name: 登录阿里云容器镜像服务
         uses: docker/login-action@v3
