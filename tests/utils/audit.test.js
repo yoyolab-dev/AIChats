@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { prisma } from './setup.js';
+import { prisma } from '../setup.js';
 import { logAudit, auditPlugin } from '../../src/utils/audit.js';
 
 describe('audit utility', () => {
