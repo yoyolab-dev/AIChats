@@ -125,7 +125,7 @@ export default async function (fastify, opts) {
   // DELETE /api/v1/messages/:id
   fastify.delete('/messages/:id', async (request, reply) => {
     const { id } = request.params;
-    const message = await request.prisma.message.findUnique({
+    const message = await prisma.message.findUnique({
       where: { id }
     });
     if (!message) {
