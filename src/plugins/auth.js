@@ -1,4 +1,5 @@
 import { verifyApiKey } from '../utils/apiKey.js';
+import { prisma } from './prisma.js';
 
 /**
  * Authenticate middleware for Fastify routes.
@@ -12,7 +13,7 @@ export async function authenticate(request, reply) {
   const apiKey = authHeader.slice(7).trim();
 
   // Find user by API key hash
-  const users = await request.prisma.user.findMany({
+  const users = await prisma.user.findMany({
     where: { status: 'active' }
   });
 
