@@ -8,9 +8,10 @@
     "build": "prisma generate",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:frontend": "vitest --config frontend/vite.config.js run"
   },
   "repository": {
     "type": "git",

@@ -1,11 +1,9 @@
 export default {
   testEnvironment: 'node',
-  moduleFileExtensions: ['js', 'mjs'],
+  transform: {},
+  moduleFileExtensions: ['js'],
   testMatch: ['**/tests/**/*.test.js'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   collectCoverageFrom: ['src/**/*.js'],
-  verbose: true,
-  transform: {
-    '^.+\.js$': ['babel-jest', { presets: ['@babel/preset-env'] }]
-  }
+  coverageDirectory: 'coverage',
+  verbose: true
 };
