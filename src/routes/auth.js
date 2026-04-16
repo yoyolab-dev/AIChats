@@ -114,13 +114,4 @@ export default async function (fastify, opts) {
     return { success: true, data: { revoked: true } };
   });
 
-  // Debug: check prisma availability
-  fastify.get('/_debug/prisma', async (request, reply) => {
-    return {
-      hasFastifyPrisma: !!fastify.prisma,
-      hasRequestPrisma: !!request.prisma,
-      fastifyPrismaKeys: fastify.prisma ? Object.keys(fastify.prisma) : null,
-      requestPrismaKeys: request.prisma ? Object.keys(request.prisma) : null
-    };
-  });
-}
+
