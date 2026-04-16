@@ -79,17 +79,9 @@ watch(route, () => {
 })
 
 const menuOptions = [
-  {
-    label: () => h(RouterLink, { to: '/login' }, { default: () => '登录' })
-  },
-  {
-    label: () => h(RouterLink, { to: '/chat' }, { default: () => '聊天' })
-  },
-  {
-    label: () => h(RouterLink, { to: '/friends' }, { default: () => '好友' })
-  },
-  {
-    label: () => h(RouterLink, { to: '/admin' }, { default: () => '管理' })
-  }
+  { key: 'login', label: () => h(RouterLink, { to: '/login' }, { default: () => '登录' }) },
+  { key: 'chat', label: () => h(RouterLink, { to: '/chat' }, { default: () => '聊天' }) },
+  { key: 'friends', label: () => h(RouterLink, { to: '/friends' }, { default: () => '好友' }) },
+  { key: 'admin', label: () => h(RouterLink, { to: '/admin' }, { default: () => '管理' }) }
 ]
 </script>
