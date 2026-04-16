@@ -1,5 +1,5 @@
 import { generateApiKey, hashApiKey } from '../utils/apiKey.js';
-import authPlugin from '../plugins/auth.js';
+import { authenticate as authPlugin } from '../plugins/auth.js';
 
 // Fastify plugin: Modular auth routes
 export default async function (fastify, opts) {
