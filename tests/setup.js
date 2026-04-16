@@ -21,12 +21,13 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  // Delete in order respecting foreign key dependencies
+  await prisma.auditLog.deleteMany();
   await prisma.messageRead.deleteMany();
   await prisma.message.deleteMany();
   await prisma.conversation.deleteMany();
   await prisma.friendship.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.auditLog.deleteMany();
 });
 
 export { server };
