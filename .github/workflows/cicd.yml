@@ -109,7 +109,7 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
-            podman kube play --replace deployment.yaml
+            podman kube play --replace --pull deployment.yaml
             echo "Backend deployed"
           EOF
 
@@ -128,7 +128,7 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
-            podman kube play --replace deployment.yaml
+            podman kube play --replace --pull deployment.yaml
             echo "Frontend deployed"
           EOF
 
