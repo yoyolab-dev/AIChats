@@ -1,8 +1,13 @@
-import { describe, it } from '@jest/globals';
+import { describe, it, beforeEach } from '@jest/globals';
 import request from 'supertest';
-import { server } from '../setup.js';
+import { server, prisma } from '../setup.js';
 
 describe('Auth API', () => {
+  beforeEach(async () => {
+    // Ensure clean database state
+    await prisma.$executeRaw`TRUNCATE TABLE "AuditLog", "MessageRead", "Message", "Conversation", "Friendship", "User" RESTART IDENTITY CASCADE`;
+  });
+
   it('should register a new user', async () => {
     const res = await request(server)
       .post('/api/v1/auth/register')

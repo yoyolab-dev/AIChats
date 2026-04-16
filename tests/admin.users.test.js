@@ -9,6 +9,8 @@ describe('Admin Users API', () => {
   let regularUserId;
 
   beforeEach(async () => {
+    // Ensure clean database state
+    await prisma.$executeRaw`TRUNCATE TABLE "AuditLog", "MessageRead", "Message", "Conversation", "Friendship", "User" RESTART IDENTITY CASCADE`;
     // 创建管理员
     const adminHash = await bcrypt.hash(adminKey, 10);
     const admin = await prisma.user.create({
