@@ -8,7 +8,7 @@ import { prisma } from './prisma.js';
 export async function authenticate(request, reply) {
   const authHeader = request.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw request.httpErrors.unauthorized('Missing or invalid Authorization header');
+    return reply.code(401).send({ success: false, error: 'Missing or invalid Authorization header' });
   }
   const apiKey = authHeader.slice(7).trim();
 
@@ -25,5 +25,5 @@ export async function authenticate(request, reply) {
     }
   }
 
-  throw request.httpErrors.unauthorized('Invalid API Key');
+  return reply.code(401).send({ success: false, error: 'Invalid API Key' });
 }
