@@ -1,15 +1,15 @@
 <template>
   <div>
-    <h2>好友列表</h2>
+    <h2 style="margin-bottom: 16px;">好友列表</h2>
     <n-space vertical>
-      <n-input v-model:value="newFriendUsername" placeholder="输入用户名添加好友" />
-      <n-button type="primary" @click="addFriend" :disabled="!newFriendUsername">添加好友</n-button>
+      <n-input v-model:value="newFriendUsername" placeholder="输入用户名添加好友" size="large" />
+      <n-button type="primary" @click="addFriend" :disabled="!newFriendUsername" block size="large">添加好友</n-button>
     </n-space>
-    <n-list hoverable clickable style="margin-top: 20px">
-      <n-list-item v-for="friend in friends" :key="friend.id">
+    <n-list hoverable clickable style="margin-top: 16px;">
+      <n-list-item v-for="friend in friends" :key="friend.id" style="padding: 12px 0;">
         <n-thing :title="friend.username" :description="friend.displayName || ''" />
         <template #suffix>
-          <n-button size="small" type="error" @click="removeFriend(friend.username)">删除</n-button>
+          <n-button size="small" type="error" @click="removeFriend(friend.username)" :style="{ minWidth: '60px' }">删除</n-button>
         </template>
       </n-list-item>
     </n-list>

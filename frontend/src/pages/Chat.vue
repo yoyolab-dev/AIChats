@@ -1,9 +1,9 @@
 <template>
   <n-space vertical style="height: 90vh">
-    <n-space v-if="!currentConversation" vertical>
-      <n-button @click="createConversation">新建会话</n-button>
+    <n-space v-if="!currentConversation" vertical style="height: 100%">
+      <n-button @click="createConversation" size="large" block>新建会话</n-button>
       <n-list hoverable clickable>
-        <n-list-item v-for="conv in conversations" :key="conv.id" @click="selectConversation(conv)">
+        <n-list-item v-for="conv in conversations" :key="conv.id" @click="selectConversation(conv)" style="padding: 12px 16px;">
           <n-thing :title="conv.id" :description="lastMessagePreview(conv)" />
         </n-list-item>
       </n-list>
@@ -11,7 +11,7 @@
 
     <n-space v-else vertical style="height: 100%; width: 100%">
       <n-space align="center">
-        <n-button @click="currentConversation = null">返回</n-button>
+        <n-button @click="currentConversation = null" size="large">返回</n-button>
         <h3>会话: {{ currentConversation.id }}</h3>
       </n-space>
 
@@ -25,13 +25,15 @@
         </n-space>
       </n-scrollbar>
 
-      <n-input
-        v-model:value="newMessage"
-        type="textarea"
-        placeholder="输入 Markdown 消息"
-        :autosize="{ minRows: 2, maxRows: 4 }"
-      />
-      <n-button type="primary" @click="sendMessage" :disabled="!newMessage.trim()">发送</n-button>
+      <n-space vertical>
+        <n-input
+          v-model:value="newMessage"
+          type="textarea"
+          placeholder="输入 Markdown 消息"
+          :autosize="{ minRows: 2, maxRows: 4 }"
+        />
+        <n-button type="primary" @click="sendMessage" :disabled="!newMessage.trim()" block size="large">发送</n-button>
+      </n-space>
     </n-space>
   </n-space>
 </template>

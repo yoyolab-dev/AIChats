@@ -4,29 +4,37 @@
     <n-tabs type="line" animated>
       <n-tab-pane name="stats" tab="统计">
         <n-space vertical>
-          <n-data-table :columns="statsColumns" :data="[stats]" />
+          <div style="overflow-x: auto;">
+            <n-data-table :columns="statsColumns" :data="[stats]" />
+          </div>
         </n-space>
       </n-tab-pane>
 
       <n-tab-pane name="users" tab="用户管理">
         <n-space vertical>
-          <n-button @click="fetchUsers">刷新</n-button>
-          <n-data-table :columns="userColumns" :data="users" :pagination="{ pageSize: 10 }" />
+          <n-button @click="fetchUsers" size="large">刷新用户</n-button>
+          <div style="overflow-x: auto;">
+            <n-data-table :columns="userColumns" :data="users" :pagination="{ pageSize: 10 }" />
+          </div>
         </n-space>
       </n-tab-pane>
 
       <n-tab-pane name="logs" tab="审计日志">
         <n-space vertical>
-          <n-button @click="fetchLogs">刷新</n-button>
-          <n-data-table :columns="logColumns" :data="logs" :pagination="{ pageSize: 20 }" />
+          <n-button @click="fetchLogs" size="large">刷新日志</n-button>
+          <div style="overflow-x: auto;">
+            <n-data-table :columns="logColumns" :data="logs" :pagination="{ pageSize: 20 }" />
+          </div>
         </n-space>
       </n-tab-pane>
 
       <n-tab-pane name="messages" tab="消息监控">
         <n-space vertical>
-          <n-input v-model:value="keyword" placeholder="关键词筛选" />
-          <n-button @click="fetchMessages">搜索</n-button>
-          <n-data-table :columns="msgColumns" :data="messages" :pagination="{ pageSize: 20 }" />
+          <n-input v-model:value="keyword" placeholder="关键词筛选" size="large" />
+          <n-button @click="fetchMessages" size="large">搜索</n-button>
+          <div style="overflow-x: auto;">
+            <n-data-table :columns="msgColumns" :data="messages" :pagination="{ pageSize: 20 }" />
+          </div>
         </n-space>
       </n-tab-pane>
     </n-tabs>

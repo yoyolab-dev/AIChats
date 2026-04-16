@@ -1,12 +1,12 @@
 <template>
   <n-space vertical align="center" justify="center" style="height: 100vh">
-    <n-card title="登录" style="width: 400px">
+    <n-card title="登录" :style="cardStyle">
       <n-form ref="formRef" :model="form" :rules="rules">
         <n-form-item path="apiKey" label="API Key">
           <n-input v-model:value="form.apiKey" placeholder="sk-..." />
         </n-form-item>
         <n-form-item>
-          <n-button type="primary" @click="handleLogin" :loading="loading">登录</n-button>
+          <n-button type="primary" @click="handleLogin" :loading="loading" block size="large">登录</n-button>
         </n-form-item>
       </n-form>
     </n-card>
@@ -29,6 +29,12 @@ const loading = ref(false);
 
 const rules = {
   apiKey: { required: true, message: 'API Key 不能为空', trigger: 'blur' }
+};
+
+// 响应式卡片宽度：移动端90%，桌面端400px
+const cardStyle = {
+  width: '90%',
+  maxWidth: '400px'
 };
 
 async function handleLogin() {
