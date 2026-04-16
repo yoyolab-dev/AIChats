@@ -53,7 +53,7 @@
         <n-input v-model:value="userForm.password" type="password" placeholder="密码" />
       </n-form-item>
       <n-form-item label="显示名">
-        <n-input v-model:value="userForm.displayName ?? ''" @update:value="(v)=>userForm.displayName = v" placeholder="可选" />
+        <n-input v-model:value="userForm.displayName" placeholder="可选" />
       </n-form-item>
       <n-form-item label="管理员">
         <n-switch v-model:value="userForm.isAdmin" />
