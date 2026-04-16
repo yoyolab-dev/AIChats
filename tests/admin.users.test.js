@@ -8,7 +8,7 @@ describe('Admin Users API', () => {
   let adminUserId;
   let regularUserId;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     // 创建管理员
     const adminHash = await bcrypt.hash(adminKey, 10);
     const admin = await prisma.user.create({

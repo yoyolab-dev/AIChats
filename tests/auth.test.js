@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 describe('Auth API', () => {
   const testApiKey = 'sk-test-1234567890';
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     // 创建一个测试用户
     const hashed = await bcrypt.hash(testApiKey, 10);
     await prisma.user.create({
