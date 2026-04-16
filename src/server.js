@@ -34,7 +34,7 @@ app.setErrorHandler(async (error, req, reply) => {
 
 // Start server (Docker entrypoint)
 const port = process.env.PORT || 3000;
-await app.listen({ port });
-console.log(`🚀 Server listening on http://localhost:${port}`);
+await app.listen({ host: '0.0.0.0', port });
+console.log(`🚀 Server listening on http://0.0.0.0:${port}`);
 
 export { app };
