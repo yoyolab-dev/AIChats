@@ -109,7 +109,8 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
-            podman kube play --replace --pull deployment.yaml
+            podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:latest
+            podman kube play --replace deployment.yaml
             echo "Backend deployed"
           EOF
 
@@ -128,7 +129,8 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
-            podman kube play --replace --pull deployment.yaml
+            podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
+            podman kube play --replace deployment.yaml
             echo "Frontend deployed"
           EOF
 
