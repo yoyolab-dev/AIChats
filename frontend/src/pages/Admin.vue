@@ -12,7 +12,10 @@
 
       <n-tab-pane name="users" tab="用户管理">
         <n-space vertical>
-          <n-button @click="fetchUsers" size="large">刷新用户</n-button>
+          <n-space align="center">
+            <n-button type="primary" @click="openCreateUser" size="large">创建用户</n-button>
+            <n-button @click="fetchUsers" size="large">刷新列表</n-button>
+          </n-space>
           <div style="overflow-x: auto;">
             <n-data-table :columns="userColumns" :data="users" :pagination="{ pageSize: 10 }" />
           </div>
@@ -39,20 +42,51 @@
       </n-tab-pane>
     </n-tabs>
   </div>
+
+  <!-- User Form Modal -->
+  <n-modal v-model:show="showUserModal" preset="card" :title="editingUser ? '编辑用户' : '创建用户'" style="width: 400px;">
+    <n-form>
+      <n-form-item label="用户名">
+        <n-input v-model:value="userForm.username" placeholder="用户名" />
+      </n-form-item>
+      <n-form-item label="密码" v-if="!editingUser">
+        <n-input v-model:value="userForm.password" type="password" placeholder="密码" />
+      </n-form-item>
+      <n-form-item label="显示名">
+        <n-input v-model:value="userForm.displayName ?? ''" @update:value="(v)=>userForm.displayName = v" placeholder="可选" />
+      </n-form-item>
+      <n-form-item label="管理员">
+        <n-switch v-model:value="userForm.isAdmin" />
+      </n-form-item>
+      <n-form-item label="状态">
+        <n-select v-model:value="userForm.status" :options="[{label:'正常',value:'active'},{label:'禁用',value:'disabled'}]"/>
+      </n-form-item>
+    </n-form>
+    <template #footer>
+      <n-space justify="end">
+        <n-button @click="showUserModal = false">取消</n-button>
+        <n-button type="primary" @click="saveUser">保存</n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, h } from 'vue';
 import axios from '@/utils/axios.js';
-import { useMessage } from 'naive-ui';
+import { useMessage, useDialog } from 'naive-ui';
 
 const message = useMessage();
+const dialog = useDialog();
 
 const stats = ref({});
 const users = ref([]);
 const logs = ref([]);
 const messages = ref([]);
 const keyword = ref('');
+const userForm = ref({ username: '', password: '', isAdmin: false, status: 'active' });
+const editingUser = ref(null);
+const showUserModal = ref(false);
 
 const statsColumns = [
   { title: '总用户数', key: 'users' },
@@ -67,6 +101,7 @@ const userColumns = [
   { title: '显示名', key: 'displayName' },
   { title: '管理员', key: 'isAdmin', render: row => row.isAdmin ? '是' : '否' },
   { title: '状态', key: 'status' },
+  { title: '创建时间', key: 'createdAt' },
   {
     title: '操作',
     key: 'actions',
@@ -75,14 +110,14 @@ const userColumns = [
         default: () => [
           h('n-button', {
             size: 'small',
-            type: row.status === 'active' ? 'warning' : 'success',
-            onClick: async () => await toggleUserStatus(row.id, row.status === 'active')
-          }, { default: () => row.status === 'active' ? '禁用' : '启用' }),
+            type: 'primary',
+            onClick: () => openEditUser(row)
+          }, { default: () => '编辑' }),
           h('n-button', {
             size: 'small',
-            type: 'info',
-            onClick: async () => await resetApiKey(row.id)
-          }, { default: () => '重置Key' })
+            type: 'error',
+            onClick: () => confirmDeleteUser(row.id)
+          }, { default: () => '删除' })
         ]
       });
     }
@@ -111,7 +146,7 @@ async function fetchStats() {
 }
 
 async function fetchUsers() {
-  const res = await axios.get('/api/v1/users');
+  const res = await axios.get('/api/v1/admin/users');
   if (res.data.success) users.value = res.data.data;
 }
 
@@ -126,17 +161,64 @@ async function fetchMessages() {
   if (res.data.success) messages.value = res.data.data;
 }
 
-async function toggleUserStatus(userId, currentlyActive) {
-  const newStatus = currentlyActive ? 'disabled' : 'active';
-  await axios.put(`/api/v1/users/${userId}`, { status: newStatus });
-  message.success(`用户已${newStatus === 'active' ? '启用' : '禁用'}`);
-  await fetchUsers();
+function openCreateUser() {
+  editingUser.value = null;
+  userForm.value = { username: '', password: '', isAdmin: false, status: 'active' };
+  showUserModal.value = true;
 }
 
-async function resetApiKey(userId) {
-  // 触发创建新 API Key
-  await axios.post('/api/v1/auth/keys', { username: userId });
-  message.success('新 API Key 已生成，请查看用户详情（此处需额外接口返回 key）');
+function openEditUser(row) {
+  editingUser.value = row.id;
+  userForm.value = {
+    username: row.username,
+    password: '', // 密码留空表示不修改
+    isAdmin: row.isAdmin,
+    status: row.status
+  };
+  showUserModal.value = true;
+}
+
+async function saveUser() {
+  try {
+    if (editingUser.value) {
+      // Update
+      const { username, isAdmin, status } = userForm.value;
+      await axios.put(`/api/v1/admin/users/${editingUser.value}`, { username, isAdmin, status });
+      message.success('用户已更新');
+    } else {
+      // Create
+      const { username, password, isAdmin, status } = userForm.value;
+      if (!username || !password) {
+        message.error('用户名和密码必填');
+        return;
+      }
+      const res = await axios.post('/api/v1/admin/users', { username, password, isAdmin, status });
+      if (res.data.success) {
+        message.success(`用户创建成功，请保存 API Key: ${res.data.data.apiKey}`);
+      }
+    }
+    showUserModal.value = false;
+    await fetchUsers();
+  } catch (e) {
+    message.error(e.response?.data?.error || '操作失败');
+  }
+}
+
+function confirmDeleteUser(userId) {
+  dialog.warning({
+    title: '确认删除',
+    content: '确定要删除该用户吗？此操作将软删除（禁用账号），无法恢复。',
+    positiveText: '删除',
+    onPositive: async () => {
+      try {
+        await axios.delete(`/api/v1/admin/users/${userId}`);
+        message.success('用户已删除');
+        await fetchUsers();
+      } catch (e) {
+        message.error(e.response?.data?.error || '删除失败');
+      }
+    }
+  });
 }
 
 onMounted(() => {
