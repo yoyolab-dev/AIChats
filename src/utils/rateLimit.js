@@ -20,21 +20,21 @@ class RateLimiter {
    */
   check(key) {
     const now = Date.now();
-    let timestamps = this.store.get(key);
-    if (!timestamps) {
-      timestamps = [];
-      this.store.set(key, timestamps);
+    let record = this.store.get(key);
+    if (!record) {
+      record = { timestamps: [] };
+      this.store.set(key, record);
     }
 
     // Remove old timestamps outside the window
     const windowStart = now - this.windowMs;
-    timestamps = timestamps.filter(t => t > windowStart);
+    record.timestamps = record.timestamps.filter(t => t > windowStart);
 
-    const used = timestamps.length;
+    const used = record.timestamps.length;
     const allowed = used < this.maxRequests;
 
     if (allowed) {
-      timestamps.push(now);
+      record.timestamps.push(now);
     }
 
     const remaining = this.maxRequests - (allowed ? used + 1 : used);
@@ -51,12 +51,10 @@ class RateLimiter {
   clean() {
     const now = Date.now();
     const windowStart = now - this.windowMs;
-    for (const [key, timestamps] of this.store.entries()) {
-      const filtered = timestamps.filter(t => t > windowStart);
-      if (filtered.length === 0) {
+    for (const [key, record] of this.store.entries()) {
+      record.timestamps = record.timestamps.filter(t => t > windowStart);
+      if (record.timestamps.length === 0) {
         this.store.delete(key);
-      } else if (filtered.length !== timestamps.length) {
-        this.store.set(key, filtered);
       }
     }
   }
