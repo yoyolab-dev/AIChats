@@ -23,6 +23,8 @@ afterAll(async () => {
 beforeEach(async () => {
   // Delete in order respecting foreign key dependencies
   await prisma.auditLog.deleteMany();
+  // Nullify conversation lastMessageId to avoid FK constraint when deleting messages
+  await prisma.$executeRaw`UPDATE "Conversation" SET "lastMessageId" = NULL`;
   await prisma.messageRead.deleteMany();
   await prisma.message.deleteMany();
   await prisma.conversation.deleteMany();
