@@ -1,4 +1,5 @@
 import { authenticate } from '../plugins/auth.js';
+import { prisma } from '../plugins/prisma.js';
 
 export default async function (fastify, opts) {
   // All admin routes require authentication
@@ -19,10 +20,10 @@ export default async function (fastify, opts) {
       messagesCount,
       conversationsCount
     ] = await Promise.all([
-      request.prisma.user.count(),
-      request.prisma.user.count({ where: { status: 'active' } }),
-      request.prisma.message.count({ where: { deleted: false } }),
-      request.prisma.conversation.count()
+      prisma.user.count(),
+      prisma.user.count({ where: { status: 'active' } }),
+      prisma.message.count({ where: { deleted: false } }),
+      prisma.conversation.count()
     ]);
 
     return {
@@ -46,7 +47,7 @@ export default async function (fastify, opts) {
     if (targetType) where.targetType = targetType;
     if (adminId) where.adminId = adminId;
 
-    const logs = await request.prisma.auditLog.findMany({
+    const logs = await prisma.auditLog.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
@@ -58,7 +59,7 @@ export default async function (fastify, opts) {
       }
     });
 
-    const total = await request.prisma.auditLog.count({ where });
+    const total = await prisma.auditLog.count({ where });
 
     return {
       success: true,
@@ -79,7 +80,7 @@ export default async function (fastify, opts) {
       where.content = { contains: keyword, mode: 'insensitive' };
     }
 
-    const messages = await request.prisma.message.findMany({
+    const messages = await prisma.message.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
@@ -94,7 +95,7 @@ export default async function (fastify, opts) {
       }
     });
 
-    const total = await request.prisma.message.count({ where });
+    const total = await prisma.message.count({ where });
 
     return {
       success: true,

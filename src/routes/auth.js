@@ -1,5 +1,6 @@
 import { generateApiKey, hashApiKey, verifyApiKey } from '../utils/apiKey.js';
 import { authenticate as authPlugin } from '../plugins/auth.js';
+import { prisma } from '../plugins/prisma.js';
 
 // Fastify plugin: Modular auth routes
 export default async function (fastify, opts) {
@@ -14,7 +15,7 @@ export default async function (fastify, opts) {
     }
 
     // Check if username exists
-    const existing = await fastify.prisma.user.findUnique({
+    const existing = await prisma.user.findUnique({
       where: { username }
     });
     if (existing) {
@@ -25,7 +26,7 @@ export default async function (fastify, opts) {
     const apiKey = generateApiKey('user');
     const apiKeyHash = await hashApiKey(apiKey);
 
-    const user = await fastify.prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         username,
         apiKeyHash,
@@ -46,7 +47,7 @@ export default async function (fastify, opts) {
     }
 
     // Find user by API key hash
-    const users = await fastify.prisma.user.findMany({
+    const users = await prisma.user.findMany({
       where: { status: 'active' }
     });
 
@@ -80,7 +81,7 @@ export default async function (fastify, opts) {
     // Determine target user: if admin and username provided, else actingUser
     let targetUser;
     if (actingUser.isAdmin && username) {
-      targetUser = await fastify.prisma.user.findUnique({ where: { username } });
+      targetUser = await prisma.user.findUnique({ where: { username } });
       if (!targetUser) {
         return reply.code(404).send({ success: false, error: 'User not found' });
       }
@@ -93,7 +94,7 @@ export default async function (fastify, opts) {
     const newHash = await hashApiKey(newApiKey);
 
     // Update user's apiKeyHash
-    await fastify.prisma.user.update({
+    await prisma.user.update({
       where: { id: targetUser.id },
       data: { apiKeyHash: newHash }
     });

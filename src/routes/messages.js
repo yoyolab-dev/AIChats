@@ -1,5 +1,6 @@
 import { authenticate } from '../plugins/auth.js';
 import { renderMarkdown } from '../utils/markdown.js';
+import { prisma } from '../plugins/prisma.js';
 
 export default async function (fastify, opts) {
   fastify.addHook('preHandler', authenticate);
@@ -13,7 +14,7 @@ export default async function (fastify, opts) {
       return reply.code(400).send({ success: false, error: 'content required' });
     }
 
-    const conversation = await request.prisma.conversation.findUnique({
+    const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId }
     });
     if (!conversation) {
@@ -25,7 +26,7 @@ export default async function (fastify, opts) {
 
     const contentHtml = renderMarkdown(content);
 
-    const message = await request.prisma.message.create({
+    const message = await prisma.message.create({
       data: {
         conversationId,
         senderId: request.user.id,
@@ -34,14 +35,14 @@ export default async function (fastify, opts) {
       }
     });
 
-    await request.prisma.conversation.update({
+    await prisma.conversation.update({
       where: { id: conversationId },
       data: { lastMessageId: message.id, updatedAt: new Date() }
     });
 
     for (const pid of conversation.participantIds) {
       if (pid !== request.user.id) {
-        await request.prisma.messageRead.create({
+        await prisma.messageRead.create({
           data: {
             messageId: message.id,
             userId: pid
@@ -58,7 +59,7 @@ export default async function (fastify, opts) {
     const { id } = request.params;
     const { limit = 50, offset = 0 } = request.query;
 
-    const conversation = await request.prisma.conversation.findUnique({
+    const conversation = await prisma.conversation.findUnique({
       where: { id }
     });
     if (!conversation) {
@@ -68,7 +69,7 @@ export default async function (fastify, opts) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
 
-    const messages = await request.prisma.message.findMany({
+    const messages = await prisma.message.findMany({
       where: { conversationId: id, deleted: false },
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
@@ -80,7 +81,7 @@ export default async function (fastify, opts) {
       }
     });
 
-    const total = await request.prisma.message.count({
+    const total = await prisma.message.count({
       where: { conversationId: id, deleted: false }
     });
 
@@ -99,7 +100,7 @@ export default async function (fastify, opts) {
       return reply.code(400).send({ success: false, error: 'content required' });
     }
 
-    const message = await request.prisma.message.findUnique({
+    const message = await prisma.message.findUnique({
       where: { id }
     });
     if (!message) {
@@ -109,7 +110,7 @@ export default async function (fastify, opts) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
 
-    const updated = await request.prisma.message.update({
+    const updated = await prisma.message.update({
       where: { id },
       data: {
         content,
@@ -134,7 +135,7 @@ export default async function (fastify, opts) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
 
-    await request.prisma.message.update({
+    await prisma.message.update({
       where: { id },
       data: { deleted: true }
     });
@@ -144,20 +145,20 @@ export default async function (fastify, opts) {
   // POST /api/v1/messages/:id/read
   fastify.post('/messages/:id/read', async (request, reply) => {
     const { id } = request.params;
-    const message = await request.prisma.message.findUnique({
+    const message = await prisma.message.findUnique({
       where: { id }
     });
     if (!message) {
       return reply.code(404).send({ success: false, error: 'Message not found' });
     }
-    const conversation = await request.prisma.conversation.findUnique({
+    const conversation = await prisma.conversation.findUnique({
       where: { id: message.conversationId }
     });
     if (!conversation || !conversation.participantIds.includes(request.user.id)) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
 
-    await request.prisma.messageRead.upsert({
+    await prisma.messageRead.upsert({
       where: {
         messageId_userId: { messageId: id, userId: request.user.id }
       },

@@ -1,4 +1,5 @@
 import { authenticate } from '../plugins/auth.js';
+import { prisma } from '../plugins/prisma.js';
 
 export default async function (fastify, opts) {
   // All user routes require authentication
@@ -6,7 +7,7 @@ export default async function (fastify, opts) {
 
   // GET /api/v1/users/me
   fastify.get('/me', async (request, reply) => {
-    const user = await request.prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: request.user.id },
       select: { id: true, username: true, displayName: true, avatarUrl: true, isAdmin: true, status: true }
     });
@@ -18,7 +19,7 @@ export default async function (fastify, opts) {
     if (!request.user.isAdmin) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
-    const users = await request.prisma.user.findMany({
+    const users = await prisma.user.findMany({
       select: { id: true, username: true, displayName: true, isAdmin: true, status: true, createdAt: true }
     });
     return { success: true, data: users };
@@ -31,7 +32,7 @@ export default async function (fastify, opts) {
     if (request.user.id !== id && !request.user.isAdmin) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
-    const user = await request.prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       select: { id: true, username: true, displayName: true, avatarUrl: true, isAdmin: true, status: true }
     });
@@ -46,7 +47,7 @@ export default async function (fastify, opts) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
     const { displayName, avatarUrl, status } = request.body;
-    const user = await request.prisma.user.update({
+    const user = await prisma.user.update({
       where: { id },
       data: { displayName, avatarUrl, status },
       select: { id: true, username: true, displayName: true, avatarUrl: true, status: true }
@@ -60,7 +61,7 @@ export default async function (fastify, opts) {
     if (request.user.id !== id && !request.user.isAdmin) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
-    await request.prisma.user.update({
+    await prisma.user.update({
       where: { id },
       data: { status: 'disabled' }
     });

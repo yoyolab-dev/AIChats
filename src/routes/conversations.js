@@ -1,4 +1,5 @@
 import { authenticate } from '../plugins/auth.js';
+import { prisma } from '../plugins/prisma.js';
 
 export default async function (fastify, opts) {
   fastify.addHook('preHandler', authenticate);
@@ -6,7 +7,7 @@ export default async function (fastify, opts) {
   // GET /api/v1/conversations
   fastify.get('/', async (request, reply) => {
     const userId = request.user.id;
-    const conversations = await request.prisma.conversation.findMany({
+    const conversations = await prisma.conversation.findMany({
       where: {
         participantIds: { has: userId }
       },
@@ -29,7 +30,7 @@ export default async function (fastify, opts) {
       return reply.code(400).send({ success: false, error: 'participantIds array required' });
     }
     const participants = [...new Set([request.user.id, ...participantIds])];
-    const conversation = await request.prisma.conversation.create({
+    const conversation = await prisma.conversation.create({
       data: {
         participantIds: participants,
       }
@@ -40,7 +41,7 @@ export default async function (fastify, opts) {
   // GET /api/v1/conversations/:id
   fastify.get('/:id', async (request, reply) => {
     const { id } = request.params;
-    const conversation = await request.prisma.conversation.findUnique({
+    const conversation = await prisma.conversation.findUnique({
       where: { id },
       include: {
         messages: {
@@ -61,7 +62,7 @@ export default async function (fastify, opts) {
   // DELETE /api/v1/conversations/:id
   fastify.delete('/:id', async (request, reply) => {
     const { id } = request.params;
-    const conversation = await request.prisma.conversation.findUnique({
+    const conversation = await prisma.conversation.findUnique({
       where: { id }
     });
     if (!conversation) {
@@ -70,7 +71,7 @@ export default async function (fastify, opts) {
     if (!conversation.participantIds.includes(request.user.id)) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
-    await request.prisma.conversation.delete({
+    await prisma.conversation.delete({
       where: { id }
     });
     return { success: true, data: { deleted: true } };
