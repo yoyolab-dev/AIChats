@@ -6,5 +6,6 @@ export default {
   testPathIgnorePatterns: ['/frontend/', '/node_modules/'],
   collectCoverageFrom: ['src/**/*.js'],
   coverageDirectory: 'coverage',
-  verbose: true
+  verbose: true,
+  maxWorkers: 1
 };
