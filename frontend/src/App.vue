@@ -1,5 +1,6 @@
 <template>
   <n-config-provider>
+    <n-dialog-provider>
     <n-message-provider>
       <!-- Login page: centered full screen -->
       <div v-if="isLoginPage" style="height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;">
@@ -43,6 +44,7 @@
         </n-drawer>
       </template>
     </n-message-provider>
+    </n-dialog-provider>
   </n-config-provider>
 </template>
 
@@ -58,7 +60,8 @@ import {
   NButton,
   NDrawer,
   NLayoutHeader,
-  NMessageProvider
+  NMessageProvider,
+  NDialogProvider
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth.js'
 
