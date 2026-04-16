@@ -14,6 +14,7 @@ model User {
   apiKeyHash   String   @unique
   displayName  String?
   avatarUrl    String?
+  email        String?  @unique
   isAdmin      Boolean  @default(false)
   status       String   @default("active") // active, disabled
   createdAt    DateTime @default(now())

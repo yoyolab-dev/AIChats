@@ -1,7 +1,7 @@
 /**
  * In-memory rate limiter using sliding window.
  * Key: identifier (e.g., API key or IP)
- * Structure: Map<key, { timestamps: number[], count: number }>
+ * Structure: Map<key, { timestamps: number[] }>
  */
 
 class RateLimiter {
@@ -20,30 +20,29 @@ class RateLimiter {
    */
   check(key) {
     const now = Date.now();
-    let record = this.store.get(key);
-    if (!record) {
-      record = { timestamps: [], count: 0 };
-      this.store.set(key, record);
+    let timestamps = this.store.get(key);
+    if (!timestamps) {
+      timestamps = [];
+      this.store.set(key, timestamps);
     }
 
-    // Remove old timestamps
+    // Remove old timestamps outside the window
     const windowStart = now - this.windowMs;
-    record.timestamps = record.timestamps.filter(t => t > windowStart);
-    record.count = record.timestamps.length;
+    timestamps = timestamps.filter(t => t > windowStart);
 
-    const remaining = this.maxRequests - record.count;
-    const allowed = remaining > 0;
+    const used = timestamps.length;
+    const allowed = used < this.maxRequests;
 
     if (allowed) {
-      record.timestamps.push(now);
-      record.count++;
+      timestamps.push(now);
     }
 
-    return {
-      allowed,
-      remaining: Math.max(0, remaining),
-      resetAt: now + this.windowMs // can be improved to actual window end
-    };
+    const remaining = this.maxRequests - (allowed ? used + 1 : used);
+
+    // Simplify resetAt to now + windowMs (could be more precise)
+    const resetAt = now + this.windowMs;
+
+    return { allowed, remaining: Math.max(0, remaining), resetAt };
   }
 
   /**
@@ -52,11 +51,12 @@ class RateLimiter {
   clean() {
     const now = Date.now();
     const windowStart = now - this.windowMs;
-    for (const [key, record] of this.store.entries()) {
-      record.timestamps = record.timestamps.filter(t => t > windowStart);
-      record.count = record.timestamps.length;
-      if (record.count === 0) {
+    for (const [key, timestamps] of this.store.entries()) {
+      const filtered = timestamps.filter(t => t > windowStart);
+      if (filtered.length === 0) {
         this.store.delete(key);
+      } else if (filtered.length !== timestamps.length) {
+        this.store.set(key, filtered);
       }
     }
   }

@@ -12,7 +12,7 @@ let server = null;
 beforeAll(async () => {
   await prisma.$connect();
   await app.listen({ port: 0, host: '127.0.0.1' });
-  server = app.server; // underlying http.Server
+  server = app.server; // underlying http.Server for supertest
 });
 
 afterAll(async () => {
