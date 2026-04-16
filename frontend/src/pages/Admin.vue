@@ -49,9 +49,6 @@
       <n-form-item label="用户名">
         <n-input v-model:value="userForm.username" placeholder="用户名" />
       </n-form-item>
-      <n-form-item label="密码" v-if="!editingUser">
-        <n-input v-model:value="userForm.password" type="password" placeholder="密码" />
-      </n-form-item>
       <n-form-item label="显示名">
         <n-input v-model:value="userForm.displayName" placeholder="可选" />
       </n-form-item>
@@ -163,7 +160,7 @@ async function fetchMessages() {
 
 function openCreateUser() {
   editingUser.value = null;
-  userForm.value = { username: '', password: '', isAdmin: false, status: 'active' };
+  userForm.value = { username: '', isAdmin: false, status: 'active', displayName: '' };
   showUserModal.value = true;
 }
 
@@ -171,9 +168,9 @@ function openEditUser(row) {
   editingUser.value = row.id;
   userForm.value = {
     username: row.username,
-    password: '', // 密码留空表示不修改
     isAdmin: row.isAdmin,
-    status: row.status
+    status: row.status,
+    displayName: row.displayName || ''
   };
   showUserModal.value = true;
 }
@@ -182,17 +179,17 @@ async function saveUser() {
   try {
     if (editingUser.value) {
       // Update
-      const { username, isAdmin, status } = userForm.value;
-      await axios.put(`/api/v1/admin/users/${editingUser.value}`, { username, isAdmin, status });
+      const { username, isAdmin, status, displayName } = userForm.value;
+      await axios.put(`/api/v1/admin/users/${editingUser.value}`, { username, isAdmin, status, displayName });
       message.success('用户已更新');
     } else {
       // Create
-      const { username, password, isAdmin, status } = userForm.value;
-      if (!username || !password) {
-        message.error('用户名和密码必填');
+      const { username, isAdmin, status, displayName } = userForm.value;
+      if (!username) {
+        message.error('用户名必填');
         return;
       }
-      const res = await axios.post('/api/v1/admin/users', { username, password, isAdmin, status });
+      const res = await axios.post('/api/v1/admin/users', { username, isAdmin, status, displayName });
       if (res.data.success) {
         message.success(`用户创建成功，请保存 API Key: ${res.data.data.apiKey}`);
       }

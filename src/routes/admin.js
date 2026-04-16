@@ -136,10 +136,10 @@ export default async function (fastify, opts) {
 
   // POST /api/v1/admin/users
   fastify.post('/users', async (request, reply) => {
-    const { username, password, isAdmin = false, status = 'active' } = request.body;
+    const { username, isAdmin = false, status = 'active', displayName } = request.body;
 
-    if (!username || !password) {
-      return reply.code(400).send({ success: false, error: 'Username and password required' });
+    if (!username) {
+      return reply.code(400).send({ success: false, error: 'Username required' });
     }
 
     // Check if username already exists
@@ -148,8 +148,6 @@ export default async function (fastify, opts) {
       return reply.code(409).send({ success: false, error: 'Username already exists' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Generate a random API key and hash it
     const apiKey = `sk-${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
     const hashedApiKey = await bcrypt.hash(apiKey, 10);
@@ -157,10 +155,10 @@ export default async function (fastify, opts) {
     const user = await prisma.user.create({
       data: {
         username,
-        passwordHash: hashedPassword,
         apiKeyHash: hashedApiKey,
         isAdmin,
-        status
+        status,
+        displayName
       }
     });
 
@@ -172,6 +170,7 @@ export default async function (fastify, opts) {
         username: user.username,
         isAdmin: user.isAdmin,
         status: user.status,
+        displayName: user.displayName,
         apiKey // only time shown
       }
     };
@@ -201,7 +200,7 @@ export default async function (fastify, opts) {
 
   // PUT /api/v1/admin/users/:id
   fastify.put('/users/:id', async (request, reply) => {
-    const { username, isAdmin, status } = request.body;
+    const { username, isAdmin, status, displayName } = request.body;
     const id = request.params.id;
 
     // Disallow changing self
@@ -209,7 +208,7 @@ export default async function (fastify, opts) {
       return reply.code(403).send({ success: false, error: 'Cannot modify yourself' });
     }
 
-    const updateData = { username, isAdmin, status };
+    const updateData = { username, isAdmin, status, displayName };
     const user = await prisma.user.update({
       where: { id },
       data: updateData,
@@ -218,6 +217,7 @@ export default async function (fastify, opts) {
         username: true,
         isAdmin: true,
         status: true,
+        displayName: true,
         updatedAt: true
       }
     });
