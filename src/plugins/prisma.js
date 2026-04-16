@@ -9,6 +9,7 @@ const prisma = new PrismaClient({
  */
 export async function prismaPlugin(fastify, options) {
   fastify.decorate('prisma', prisma);
+  fastify.decorateRequest('prisma', prisma);
   fastify.addHook('onClose', async (instance) => {
     await prisma.$disconnect();
   });
