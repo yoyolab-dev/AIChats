@@ -32,11 +32,9 @@ app.setErrorHandler(async (error, req, reply) => {
   reply.code(error.status || 500).send({ success: false, error: error.name || 'InternalServerError', message: error.message || 'Internal server error' });
 });
 
-// Only start server if run directly
-if (process.argv[1] === `file://${__filename}`) {
-  const port = process.env.PORT || 3000;
-  await app.listen({ port });
-  console.log(`🚀 Server listening on http://localhost:${port}`);
-}
+// Start server (Docker entrypoint)
+const port = process.env.PORT || 3000;
+await app.listen({ port });
+console.log(`🚀 Server listening on http://localhost:${port}`);
 
 export { app };
