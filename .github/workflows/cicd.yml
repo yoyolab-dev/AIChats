@@ -39,10 +39,10 @@ jobs:
           # 测试数据库已自动创建，无需额外初始化
           echo "测试数据库已就绪"
 
-      - name: 运行 Prisma 迁移 (测试库)
+      - name: 同步数据库 Schema (测试库)
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aichats_test
-        run: npx prisma migrate deploy
+        run: npx prisma db push --accept-data-loss
 
       - name: 运行后端测试 (Jest)
         env:
