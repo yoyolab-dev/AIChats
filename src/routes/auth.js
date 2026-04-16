@@ -113,5 +113,6 @@ export default async function (fastify, opts) {
     // Here we just acknowledge
     return { success: true, data: { revoked: true } };
   });
+}
 
 
