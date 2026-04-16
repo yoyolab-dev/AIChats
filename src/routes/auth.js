@@ -1,4 +1,4 @@
-import { generateApiKey, hashApiKey } from '../utils/apiKey.js';
+import { generateApiKey, hashApiKey, verifyApiKey } from '../utils/apiKey.js';
 import { authenticate as authPlugin } from '../plugins/auth.js';
 
 // Fastify plugin: Modular auth routes
@@ -36,6 +36,40 @@ export default async function (fastify, opts) {
 
     // Return API key plaintext (only time it's shown)
     return { success: true, data: { user: { id: user.id, username: user.username, displayName: user.displayName }, apiKey } };
+  });
+
+  // POST /api/v1/auth/login
+  fastify.post('/login', async (request, reply) => {
+    const { apiKey } = request.body;
+    if (!apiKey) {
+      return reply.code(400).send({ success: false, error: 'API Key required' });
+    }
+
+    // Find user by API key hash
+    const users = await request.prisma.user.findMany({
+      where: { status: 'active' }
+    });
+
+    for (const user of users) {
+      const valid = await verifyApiKey(apiKey, user.apiKeyHash);
+      if (valid) {
+        // Return user info (exclude sensitive fields)
+        return {
+          success: true,
+          data: {
+            user: {
+              id: user.id,
+              username: user.username,
+              displayName: user.displayName,
+              isAdmin: user.isAdmin,
+              avatarUrl: user.avatarUrl,
+            }
+          }
+        };
+      }
+    }
+
+    return reply.code(401).send({ success: false, error: 'Invalid API Key' });
   });
 
   // POST /api/v1/auth/keys (requires auth)
