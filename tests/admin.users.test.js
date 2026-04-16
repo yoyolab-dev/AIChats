@@ -1,6 +1,5 @@
 import request from 'supertest';
-import { server } from './setup.js';
-import { prisma } from './setup.js';
+import { app, prisma } from './setup.js';
 import bcrypt from 'bcryptjs';
 
 describe('Admin Users API', () => {
@@ -37,18 +36,18 @@ describe('Admin Users API', () => {
   });
 
   test('GET /api/v1/admin/users - unauthorized returns 401', async () => {
-    await request(server).get('/api/v1/admin/users').expect(401);
+    await request(app).get('/api/v1/admin/users').expect(401);
   });
 
   test('GET /api/v1/admin/users - non-admin returns 403', async () => {
-    await request(server)
+    await request(app)
       .get('/api/v1/admin/users')
       .set('Authorization', `Bearer ${userKey}`)
       .expect(403);
   });
 
   test('GET /api/v1/admin/users - admin success', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .get('/api/v1/admin/users')
       .set('Authorization', `Bearer ${adminKey}`)
       .expect(200);
@@ -59,7 +58,7 @@ describe('Admin Users API', () => {
   });
 
   test('POST /api/v1/admin/users - create new user', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .post('/api/v1/admin/users')
       .set('Authorization', `Bearer ${adminKey}`)
       .send({
@@ -76,7 +75,7 @@ describe('Admin Users API', () => {
   });
 
   test('PUT /api/v1/admin/users/:id - update user', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .put(`/api/v1/admin/users/${regularUserId}`)
       .set('Authorization', `Bearer ${adminKey}`)
       .send({
@@ -93,7 +92,7 @@ describe('Admin Users API', () => {
   });
 
   test('DELETE /api/v1/admin/users/:id - soft delete', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .delete(`/api/v1/admin/users/${regularUserId}`)
       .set('Authorization', `Bearer ${adminKey}`)
       .expect(200);
@@ -102,7 +101,7 @@ describe('Admin Users API', () => {
     expect(res.body.data.status).toBe('disabled');
 
     // 确认用户已禁用
-    const getRes = await request(server)
+    const getRes = await request(app)
       .get(`/api/v1/admin/users/${regularUserId}`)
       .set('Authorization', `Bearer ${adminKey}`)
       .expect(200);

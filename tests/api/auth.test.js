@@ -1,10 +1,10 @@
 import { describe, it, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
-import { app } from '../../src/server.js';
+import { server } from '../setup.js';
 
 describe('Auth API', () => {
   it('should register a new user', async () => {
-    const res = await request(app)
+    const res = await request(server)
       .post('/api/v1/auth/register')
       .send({ username: 'testuser', email: 'test@example.com' })
       .expect(200);

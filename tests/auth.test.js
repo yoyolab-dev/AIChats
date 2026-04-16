@@ -1,6 +1,5 @@
 import request from 'supertest';
-import { server } from './setup.js';
-import { prisma } from './setup.js';
+import { app, prisma } from './setup.js';
 import bcrypt from 'bcryptjs';
 
 describe('Auth API', () => {
@@ -20,7 +19,7 @@ describe('Auth API', () => {
   });
 
   test('POST /api/v1/auth/login - success', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .post('/api/v1/auth/login')
       .send({ apiKey: testApiKey })
       .expect(200);
@@ -30,7 +29,7 @@ describe('Auth API', () => {
   });
 
   test('POST /api/v1/auth/login - invalid key', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .post('/api/v1/auth/login')
       .send({ apiKey: 'wrong-key' })
       .expect(401);
@@ -40,7 +39,7 @@ describe('Auth API', () => {
   });
 
   test('GET /api/v1/users/me - requires auth', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .get('/api/v1/users/me')
       .expect(401);
 
@@ -48,7 +47,7 @@ describe('Auth API', () => {
   });
 
   test('GET /api/v1/users/me - with valid token', async () => {
-    const res = await request(server)
+    const res = await request(app)
       .get('/api/v1/users/me')
       .set('Authorization', `Bearer ${testApiKey}`)
       .expect(200);
