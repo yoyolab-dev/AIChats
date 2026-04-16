@@ -9,8 +9,9 @@ class RateLimiter {
     this.windowMs = 60 * 60 * 1000; // 1 hour
     this.maxRequests = 1000;
     this.store = new Map();
-    // Cleanup interval
-    setInterval(() => this.clean(), 5 * 60 * 1000);
+    // Cleanup interval (unref'd so it won't keep process alive)
+    const interval = setInterval(() => this.clean(), 5 * 60 * 1000);
+    interval.unref();
   }
 
   /**
