@@ -5,11 +5,10 @@ export default async function (fastify, opts) {
   fastify.addHook('preHandler', authenticate);
 
   // Additional admin check
-  fastify.addHook('preHandler', async (request, reply, done) => {
+  fastify.addHook('preHandler', async (request, reply) => {
     if (!request.user.isAdmin) {
       return reply.code(403).send({ success: false, error: 'Forbidden' });
     }
-    done();
   });
 
   // GET /api/v1/admin/stats
