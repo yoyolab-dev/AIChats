@@ -52,12 +52,7 @@ export default async function (fastify, opts) {
       where,
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
-      skip,
-      include: {
-        admin: {
-          select: { id: true, username: true, displayName: true }
-        }
-      }
+      skip
     });
 
     const total = await prisma.auditLog.count({ where });
