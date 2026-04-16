@@ -21,15 +21,8 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  // Delete in order respecting foreign key dependencies
-  await prisma.auditLog.deleteMany();
-  // Nullify conversation lastMessageId to avoid FK constraint when deleting messages
-  await prisma.$executeRaw`UPDATE "Conversation" SET "lastMessageId" = NULL`;
-  await prisma.messageRead.deleteMany();
-  await prisma.message.deleteMany();
-  await prisma.conversation.deleteMany();
-  await prisma.friendship.deleteMany();
-  await prisma.user.deleteMany();
+  // Truncate all tables with cascade to ensure clean state
+  await prisma.$executeRaw`TRUNCATE TABLE "AuditLog", "MessageRead", "Message", "Conversation", "Friendship", "User" RESTART IDENTITY CASCADE`;
 });
 
 export { server };
