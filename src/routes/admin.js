@@ -102,31 +102,41 @@ export default async function (fastify, opts) {
 
   // GET /api/v1/admin/users
   fastify.get('/users', async (request, reply) => {
-    const { page = 1, limit = 20 } = request.query;
-    const skip = (Number(page) - 1) * Number(limit);
+    if (!request.user.isAdmin) {
+      return reply.code(403).send({ success: false, error: 'Forbidden' });
+    }
+    let { page = '1', limit = '20' } = request.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
 
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: Number(limit),
-      skip,
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        isAdmin: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true
-      }
-    });
+    try {
+      const users = await prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limitNum,
+        skip,
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          isAdmin: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
 
-    const total = await prisma.user.count();
+      const total = await prisma.user.count();
 
-    return {
-      success: true,
-      data: users,
-      pagination: { page: Number(page), limit: Number(limit), total }
-    };
+      return {
+        success: true,
+        data: users,
+        pagination: { page: pageNum, limit: limitNum, total }
+      };
+    } catch (error) {
+      reply.log.error(error);
+      return reply.code(400).send({ success: false, error: 'Invalid pagination or database error' });
+    }
   });
 
   // POST /api/v1/admin/users
