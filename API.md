@@ -299,10 +299,10 @@
 **请求体**:
 ```json
 {
-  "participantIds": ["uuid", "uuid", ...] (必填，非空数组)
+  "participantIds": ["uuid", "uuid", ...] (可选，默认为空数组)
 }
 ```
-注意：当前用户会自动加入会话。
+注意：当前用户会自动加入会话。如果未提供 `participantIds` 或为空，则创建仅包含当前用户的单会话。
 
 **响应**:
 ```json
@@ -310,13 +310,13 @@
   "success": true,
   "data": {
     "id": "uuid",
-    "participantIds": ["...当前用户ID", ...传入的IDs]
+    "participantIds": ["当前用户ID", ...传入的其他IDs]
   }
 }
 ```
 
 **错误**:
-- `400`: participantIds 必填且为非空数组
+- `400`: participantIds 必须为数组（如果提供）
 
 ---
 

@@ -26,12 +26,11 @@ export default async function (fastify, opts) {
   // POST /api/v1/conversations
   fastify.post('/', async (request, reply) => {
     const { participantIds } = request.body;
-    // Validate participantIds exists and is non-empty array
-    if (!participantIds || !Array.isArray(participantIds) || participantIds.length === 0) {
-      return reply.code(400).send({ success: false, error: 'participantIds array required' });
+    // participantIds is optional; if not provided or empty, create a conversation with only the current user
+    let participants = [request.user.id];
+    if (participantIds && Array.isArray(participantIds) && participantIds.length > 0) {
+      participants = [...new Set([request.user.id, ...participantIds])];
     }
-    // Always include the current user
-    const participants = [...new Set([request.user.id, ...participantIds])];
     const conversation = await prisma.conversation.create({
       data: {
         participantIds: participants,
