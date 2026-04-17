@@ -295,10 +295,10 @@ export default async function (fastify, opts) {
     if (!targetUser) {
       return reply.code(404).send({ success: false, error: 'User not found' });
     }
-    const num = await prisma.friendship.deleteMany({
+    const result = await prisma.friendship.deleteMany({
       where: { userId, friendId }
     });
-    if (num === 0) {
+    if (result.count === 0) {
       return reply.code(404).send({ success: false, error: 'Friendship not found' });
     }
     return { success: true, data: { deleted: true } };
