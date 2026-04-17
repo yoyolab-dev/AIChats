@@ -76,24 +76,26 @@ describe('Conversations API', () => {
       expect(res.body.data.participantIds).toContain(bobId);
     });
 
-    it('requires participantIds array', async () => {
+    it('allows missing participantIds (creates solo conversation)', async () => {
       const res = await request(server)
         .post('/api/v1/conversations')
         .set('Authorization', `Bearer ${aliceKey}`)
         .send({})
-        .expect(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe('participantIds array required');
+        .expect(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.participantIds).toContain(aliceId);
+      expect(res.body.data.participantIds.length).toBe(1);
     });
 
-    it('rejects empty participantIds array', async () => {
+    it('allows empty participantIds array (creates solo conversation)', async () => {
       const res = await request(server)
         .post('/api/v1/conversations')
         .set('Authorization', `Bearer ${aliceKey}`)
         .send({ participantIds: [] })
-        .expect(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe('participantIds array required');
+        .expect(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.participantIds).toContain(aliceId);
+      expect(res.body.data.participantIds.length).toBe(1);
     });
   });
 
