@@ -123,7 +123,7 @@ const userColumns = [
     title: '操作',
     key: 'actions',
     render: (row) => {
-      return h('n-space', {}, {
+      return h('n-space', { size: 12 }, {
         default: () => [
           h('n-button', {
             size: 'small',
