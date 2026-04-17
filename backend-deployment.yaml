@@ -33,7 +33,7 @@ spec:
     - name: DATABASE_URL
       value: "postgresql://openchat:pg-password@localhost:5432/openchat"
     command: ["sh", "-c"]
-    args: ["sleep 10 && npx prisma db push && node src/server.js"]
+    args: ["sleep 10 && npx prisma db push --accept-data-loss && node src/server.js"]
     labels:
       traefik.enable: "true"
       traefik.http.routers.aichats-backend.rule: "Host(`api.oujun.work`)"
