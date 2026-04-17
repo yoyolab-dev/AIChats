@@ -40,6 +40,19 @@
           </div>
         </n-space>
       </n-tab-pane>
+
+      <n-tab-pane name="friends" tab="好友管理">
+        <n-space vertical>
+          <n-space align="center">
+            <n-input v-model:value="targetUserId" placeholder="目标用户 ID" style="width: 300px" />
+            <n-button @click="fetchFriends" type="primary" :loading="loadingFriends">加载好友列表</n-button>
+          </n-space>
+          <n-data-table v-if="friends.length" :columns="friendColumns" :data="friends" :bordered="false" />
+          <n-divider />
+          <n-input v-model:value="newFriendUsername" placeholder="添加好友（用户名）" style="width: 300px" />
+          <n-button @click="addFriend" type="primary" :loading="addingFriend">添加好友</n-button>
+        </n-space>
+      </n-tab-pane>
     </n-tabs>
   </div>
 
@@ -84,6 +97,13 @@ const keyword = ref('');
 const userForm = ref({ username: '', password: '', isAdmin: false, status: 'active' });
 const editingUser = ref(null);
 const showUserModal = ref(false);
+
+// Friends management
+const targetUserId = ref('');
+const friends = ref([]);
+const newFriendUsername = ref('');
+const loadingFriends = ref(false);
+const addingFriend = ref(false);
 
 const statsColumns = [
   { title: '总用户数', key: 'users' },
@@ -137,6 +157,23 @@ const msgColumns = [
   { title: '内容预览', key: 'content', render: row => row.content?.slice(0, 50) + '...' }
 ];
 
+const friendColumns = [
+  { title: 'ID', key: 'id' },
+  { title: '用户名', key: 'username' },
+  { title: '显示名', key: 'displayName' },
+  {
+    title: '操作',
+    key: 'actions',
+    render: (row) => {
+      return h('n-button', {
+        size: 'small',
+        type: 'error',
+        onClick: () => removeFriend(row.id)
+      }, { default: () => '移除' });
+    }
+  }
+];
+
 async function fetchStats() {
   const res = await axios.get('/api/v1/admin/stats');
   if (res.data.success) stats.value = res.data.data;
@@ -178,12 +215,10 @@ function openEditUser(row) {
 async function saveUser() {
   try {
     if (editingUser.value) {
-      // Update
       const { username, isAdmin, status, displayName } = userForm.value;
       await axios.put(`/api/v1/admin/users/${editingUser.value}`, { username, isAdmin, status, displayName });
       message.success('用户已更新');
     } else {
-      // Create
       const { username, isAdmin, status, displayName } = userForm.value;
       if (!username) {
         message.error('用户名必填');
@@ -216,6 +251,65 @@ function confirmDeleteUser(userId) {
       }
     }
   });
+}
+
+// Friends management
+async function fetchFriends() {
+  if (!targetUserId.value) {
+    message.warning('请输入目标用户 ID');
+    return;
+  }
+  loadingFriends.value = true;
+  try {
+    const res = await axios.get(`/api/v1/admin/users/${targetUserId.value}/friends`);
+    if (res.data.success) {
+      friends.value = res.data.data;
+    } else {
+      friends.value = [];
+    }
+  } catch (e) {
+    message.error(e.response?.data?.error || '获取好友列表失败');
+    friends.value = [];
+  } finally {
+    loadingFriends.value = false;
+  }
+}
+
+async function addFriend() {
+  if (!targetUserId.value) {
+    message.warning('请输入目标用户 ID');
+    return;
+  }
+  if (!newFriendUsername.value) {
+    message.warning('请输入好友用户名');
+    return;
+  }
+  addingFriend.value = true;
+  try {
+    const res = await axios.post(`/api/v1/admin/users/${targetUserId.value}/friends`, { friendUsername: newFriendUsername.value });
+    if (res.data.success) {
+      message.success('好友添加成功');
+      newFriendUsername.value = '';
+      await fetchFriends();
+    }
+  } catch (e) {
+    message.error(e.response?.data?.error || '添加好友失败');
+  } finally {
+    addingFriend.value = false;
+  }
+}
+
+async function removeFriend(friendId) {
+  if (!targetUserId.value) return;
+  try {
+    const res = await axios.delete(`/api/v1/admin/users/${targetUserId.value}/friends/${friendId}`);
+    if (res.data.success) {
+      message.success('已移除好友');
+      await fetchFriends();
+    }
+  } catch (e) {
+    message.error(e.response?.data?.error || '移除失败');
+  }
 }
 
 onMounted(() => {

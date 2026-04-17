@@ -238,4 +238,69 @@ export default async function (fastify, opts) {
 
     return { success: true, data: user };
   });
+
+  // GET /api/v1/admin/users/:userId/friends
+  fastify.get('/users/:userId/friends', async (request, reply) => {
+    const { userId } = request.params;
+    // Verify target user exists
+    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!targetUser) {
+      return reply.code(404).send({ success: false, error: 'User not found' });
+    }
+    // Get accepted friendships where target user is the follower
+    const friendships = await prisma.friendship.findMany({
+      where: { userId, status: 'accepted' },
+      include: { friend: { select: { id: true, username: true, displayName: true, avatarUrl: true } } }
+    });
+    const friends = friendships.map(f => f.friend);
+    return { success: true, data: friends };
+  });
+
+  // POST /api/v1/admin/users/:userId/friends
+  fastify.post('/users/:userId/friends', async (request, reply) => {
+    const { userId } = request.params;
+    const { friendUsername } = request.body;
+    if (!friendUsername) {
+      return reply.code(400).send({ success: false, error: 'friendUsername required' });
+    }
+    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!targetUser) {
+      return reply.code(404).send({ success: false, error: 'User not found' });
+    }
+    const friend = await prisma.user.findUnique({ where: { username: friendUsername } });
+    if (!friend) {
+      return reply.code(404).send({ success: false, error: 'Friend user not found' });
+    }
+    if (friend.id === userId) {
+      return reply.code(400).send({ success: false, error: 'Cannot friend yourself' });
+    }
+    // Check existing friendship (from target to friend)
+    const existing = await prisma.friendship.findFirst({
+      where: { userId, friendId: friend.id }
+    });
+    if (existing) {
+      return reply.code(409).send({ success: false, error: 'Friendship already exists' });
+    }
+    const friendship = await prisma.friendship.create({
+      data: { userId, friendId: friend.id, status: 'accepted' }
+    });
+    return { success: true, data: { id: friendship.id, userId, friendId: friend.id, status: 'accepted' } };
+  });
+
+  // DELETE /api/v1/admin/users/:userId/friends/:friendId
+  fastify.delete('/users/:userId/friends/:friendId', async (request, reply) => {
+    const { userId, friendId } = request.params;
+    // Verify target user exists
+    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!targetUser) {
+      return reply.code(404).send({ success: false, error: 'User not found' });
+    }
+    const num = await prisma.friendship.deleteMany({
+      where: { userId, friendId }
+    });
+    if (num === 0) {
+      return reply.code(404).send({ success: false, error: 'Friendship not found' });
+    }
+    return { success: true, data: { deleted: true } };
+  });
 }
