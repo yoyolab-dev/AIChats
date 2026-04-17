@@ -159,10 +159,9 @@ describe('Admin Friends Management', () => {
     });
 
     it('returns 404 if friendship not found', async () => {
-      // Delete first to make it not found
-      await prisma.friendship.deleteMany({ where: { userId, friendId: otherId } });
+      // Use adminId as friendId: no friendship exists between user and admin
       const res = await request(server)
-        .delete(`/api/v1/admin/users/${userId}/friends/${otherId}`)
+        .delete(`/api/v1/admin/users/${userId}/friends/${adminId}`)
         .set('Authorization', `Bearer ${adminKey}`)
         .expect(404);
       expect(res.body.success).toBe(false);
