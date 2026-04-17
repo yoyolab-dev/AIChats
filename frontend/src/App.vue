@@ -81,6 +81,8 @@ const checkMobile = () => {
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
+  // Restore authentication session from localStorage
+  authStore.initFromStorage()
 })
 
 onUnmounted(() => {

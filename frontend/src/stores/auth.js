@@ -25,11 +25,24 @@ export const useAuthStore = defineStore('auth', {
       this.user = null;
       localStorage.removeItem('apiKey');
     },
-    initFromStorage() {
+    async initFromStorage() {
       const key = localStorage.getItem('apiKey');
       if (key) {
         this.apiKey = key;
-        // TODO: fetch user info in background
+        try {
+          const res = await axios.get('/api/v1/users/me', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (res.data.success) {
+            this.user = res.data.data;
+          } else {
+            // Invalid key, clear storage
+            this.logout();
+          }
+        } catch (e) {
+          // Network or auth error, keep apiKey but user remains null (will retry later)
+          console.error('Failed to restore session:', e);
+        }
       }
     }
   }
