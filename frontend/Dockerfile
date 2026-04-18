@@ -1,9 +1,15 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts=false
+
+# Copy source
 COPY . .
+
+# Build
 RUN npm run build
 
 # Production stage
