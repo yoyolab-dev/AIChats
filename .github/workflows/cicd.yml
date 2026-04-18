@@ -54,14 +54,15 @@ jobs:
           NODE_ENV: test
         run: npm test
 
-      - name: 安装前端依赖
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: 运行前端单元测试 (Vitest)
-        working-directory: ./frontend
-        run: npm test
-
+      # Frontend build temporarily disabled until UI is complete
+      # - name: 安装前端依赖
+      #   working-directory: ./frontend
+      #   run: npm ci
+      #
+      # - name: 运行前端单元测试 (Vitest)
+      #   working-directory: ./frontend
+      #   run: npm test
+      #
       - name: 登录阿里云容器镜像服务
         uses: docker/login-action@v3
         with:
@@ -91,15 +92,16 @@ jobs:
             ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:latest
             ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:${{ steps.version.outputs.VERSION }}
 
-      - name: 构建并推送前端镜像
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          no-cache: true
-          tags: |
-            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
+      # Frontend image build disabled for now
+      # - name: 构建并推送前端镜像
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./frontend
+      #     file: ./frontend/Dockerfile
+      #     push: true
+      #     no-cache: true
+      #     tags: |
+      #       ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
 
       - name: Prepare deployment manifests
         run: |
@@ -112,11 +114,12 @@ jobs:
         with:
           name: backend-deployment
           path: deploy/backend/
-      - name: 上传前端部署文件
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-deployment
-          path: deploy/frontend/
+      # Frontend artifact upload disabled
+      # - name: 上传前端部署文件
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: frontend-deployment
+      #     path: deploy/frontend/
 
   deploy:
     needs: build
@@ -128,11 +131,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-deployment
-      - name: 下载前端部署文件
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-deployment
-
+      # Frontend deployment disabled
+      # - name: 下载前端部署文件
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: frontend-deployment
+      #
       - name: 配置 SSH
         run: |
           mkdir -p ~/.ssh
@@ -161,25 +165,26 @@ jobs:
             echo "Backend deployed"
           EOF
 
-      - name: 上传并部署前端
-        run: |
-          ls -la
-          if [ -d frontend-deployment ]; then
-            cd frontend-deployment
-            ls -la
-            scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
-          else
-            echo "frontend-deployment directory not found, searching..."
-            find . -name "deployment.yaml" -maxdepth 2
-            scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} frontend-deployment/deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/ || true
-          fi
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
-            set -e
-            cd /root
-            podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
-            podman kube play --replace deployment.yaml
-            echo "Frontend deployed"
-          EOF
+      # Frontend deployment disabled
+      # - name: 上传并部署前端
+      #   run: |
+      #     ls -la
+      #     if [ -d frontend-deployment ]; then
+      #       cd frontend-deployment
+      #       ls -la
+      #       scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/
+      #     else
+      #       echo "frontend-deployment directory not found, searching..."
+      #       find . -name "deployment.yaml" -maxdepth 2
+      #       scp -i ~/.ssh/id_rsa -P ${{ secrets.SERVER_PORT }} frontend-deployment/deployment.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/ || true
+      #     fi
+      #     ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
+      #       set -e
+      #       cd /root
+      #       podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
+      #       podman kube play --replace deployment.yaml
+      #       echo "Frontend deployed"
+      #     EOF
 
       - name: 清理本地 SSH 密钥
         if: always()
