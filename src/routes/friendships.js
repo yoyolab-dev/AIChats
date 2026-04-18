@@ -74,7 +74,7 @@ export default async function (fastify, opts) {
     const meId = request.user.id;
     const friendId = targetUser.id;
     // Find any friendship between me and target in either direction
-    const friendship = await prisma.friendship.findOne({
+    const friendship = await prisma.friendship.findFirst({
       where: {
         OR: [
           { userId: meId, friendId },
@@ -103,7 +103,7 @@ export default async function (fastify, opts) {
     const meId = request.user.id;
     const friendId = targetUser.id;
     // Find the friendship either as requester or receiver
-    const friendship = await prisma.friendship.findOne({
+    const friendship = await prisma.friendship.findFirst({
       where: {
         OR: [
           { userId: meId, friendId },
