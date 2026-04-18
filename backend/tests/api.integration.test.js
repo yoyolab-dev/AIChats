@@ -46,11 +46,11 @@ beforeAll(async () => {
   fastify = Fastify({ logger: true });
 
   // Register routes (same as server.js)
-  const { authMiddleware } = await import('./src/plugins/auth.js');
-  const users = await import('./src/routes/users.routes.js');
-  const friendships = await import('./src/routes/friendships.routes.js');
-  const messages = await import('./src/routes/messages.routes.js');
-  const groups = await import('./src/routes/groups.routes.js');
+  const { authMiddleware } = await import('../src/plugins/auth.js');
+  const users = await import('../src/routes/users.routes.js');
+  const friendships = await import('../src/routes/friendships.routes.js');
+  const messages = await import('../src/routes/messages.routes.js');
+  const groups = await import('../src/routes/groups.routes.js');
 
   fastify.post('/api/v1/auth/register', users.registerHandler);
   fastify.get('/api/v1/users/me', { onRequest: [authMiddleware] }, users.getMeHandler);
