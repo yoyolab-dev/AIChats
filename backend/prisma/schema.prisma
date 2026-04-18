@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(50)
+  nickname  String?  @db.VarChar(100)
+  apiKey    String   @unique @db.VarChar(64)
+  role      Role      @default(USER)
+  avatar    String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  sentFriendships     Friendship[]    @relation("FriendshipRequester")
+  receivedFriendships Friendship[]    @relation("FriendshipReceiver")
+  sentMessages        Message[]       @relation("MessageSender")
+  receivedMessages    Message[]       @relation("MessageReceiver")
+  ownedGroups         Group[]         @relation("GroupOwner")
+  groupMemberships    GroupMember[]   @relation("GroupMemberUser")
+  sentGroupMessages   GroupMessage[] @relation("GroupMessageSender")
+
+  @@map("users")
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  friendId  Int
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User @relation("FriendshipRequester", fields: [userId], references: [id], onDelete: Cascade)
+  friend  User @relation("FriendshipReceiver", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@map("friendships")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  senderId  Int
+  receiverId Int
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  sender    User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver  User   @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Group {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  ownerId     Int
+  avatar      String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  owner      User         @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members    GroupMember[]
+  messages   GroupMessage[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  userId    Int
+  role      GroupRole  @default(MEMBER)
+  joinedAt  DateTime   @default(now()) @map("joined_at")
+
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User       @relation("GroupMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+model GroupMessage {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  senderId  Int
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sender    User      @relation("GroupMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([createdAt])
+  @@map("group_messages")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
