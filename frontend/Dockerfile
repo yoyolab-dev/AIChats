@@ -1,6 +1,12 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
+
+# 安装构建工具（可选）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies (including dev)
 COPY package*.json ./
