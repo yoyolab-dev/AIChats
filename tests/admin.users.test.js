@@ -110,4 +110,36 @@ describe('Admin Users API', () => {
 
     expect(getRes.body.data.status).toBe('disabled');
   });
+
+  test('POST /api/v1/admin/users/:id/reset-api-key - success', async () => {
+    // Create a user to test reset
+    const createRes = await request(server)
+      .post('/api/v1/admin/users')
+      .set('Authorization', `Bearer ${adminKey}`)
+      .send({
+        username: 'keyresetuser',
+        isAdmin: false,
+        status: 'active'
+      })
+      .expect(200);
+    const userId = createRes.body.data.id;
+    const initialKey = createRes.body.data.apiKey;
+
+    const resetRes = await request(server)
+      .post(`/api/v1/admin/users/${userId}/reset-api-key`)
+      .set('Authorization', `Bearer ${adminKey}`)
+      .expect(200);
+
+    expect(resetRes.body.success).toBe(true);
+    expect(resetRes.body.data.apiKey).toBeDefined();
+    expect(resetRes.body.data.apiKey).toMatch(/^sk-/);
+    expect(resetRes.body.data.apiKey).not.toBe(initialKey);
+  });
+
+  test('POST /api/v1/admin/users/:id/reset-api-key - non-existent user returns 404', async () => {
+    await request(server)
+      .post('/api/v1/admin/users/999999/reset-api-key')
+      .set('Authorization', `Bearer ${adminKey}`)
+      .expect(404);
+  });
 });
