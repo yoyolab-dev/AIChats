@@ -4,6 +4,7 @@ import * as usersRoutes from './routes/users.routes.js';
 import * as friendshipsRoutes from './routes/friendships.routes.js';
 import * as messagesRoutes from './routes/messages.routes.js';
 import * as groupsRoutes from './routes/groups.routes.js';
+import * as adminRoutes from './routes/admin.routes.js';
 
 const fastify = Fastify({
   logger: true,
@@ -38,6 +39,11 @@ fastify.post('/api/v1/groups/:groupId/members', { onRequest: [authMiddleware] },
 fastify.delete('/api/v1/groups/:groupId/members/:userId', { onRequest: [authMiddleware] }, groupsRoutes.removeGroupMemberHandler);
 fastify.get('/api/v1/groups/:groupId/messages', { onRequest: [authMiddleware] }, groupsRoutes.getGroupMessagesHandler);
 fastify.post('/api/v1/groups/:groupId/messages', { onRequest: [authMiddleware] }, groupsRoutes.sendGroupMessageHandler);
+
+// 管理员路由（需要鉴权 + 角色检查）
+fastify.get('/api/v1/admin/messages', { onRequest: [authMiddleware] }, adminRoutes.getAllMessagesHandler);
+fastify.get('/api/v1/admin/group-messages', { onRequest: [authMiddleware] }, adminRoutes.getAllGroupMessagesHandler);
+fastify.put('/api/v1/admin/relations/:friendshipId', { onRequest: [authMiddleware] }, adminRoutes.adminUpdateFriendshipHandler);
 
 // 健康检查
 fastify.get('/health', async () => ({ status: 'ok' }));
