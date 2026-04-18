@@ -81,7 +81,7 @@
   </n-modal>
 
   <!-- Reset API Key Modal -->
-  <n-modal v-model:show="showResetKeyModal" preset="card" title="重置 API Key" style="width: 400px;">
+  <n-modal v-model:show="showResetKeyModal" preset="card" title="API Key" style="width: 400px;">
     <n-space vertical v-if="resetKeyResult">
       <p>用户: {{ resettingUser?.username }}</p>
       <n-input 
@@ -134,6 +134,18 @@ const userColumns = [
   { title: '状态', key: 'status' },
   { title: '创建时间', key: 'createdAt' },
   {
+    title: 'API Key',
+    key: 'apiKey',
+    render: (row) => {
+      const key = row.apiKey;
+      if (!key) return '未设置';
+      if (key.length > 12) {
+        return `sk-${'*'.repeat(6)}...${key.slice(-4)}`;
+      }
+      return key;
+    }
+  },
+  {
     title: '操作',
     key: 'actions',
     render: (row) => {
@@ -149,6 +161,11 @@ const userColumns = [
             type: 'error',
             onClick: () => confirmDeleteUser(row.id)
           }, { default: () => '删除' }),
+          h('n-button', {
+            size: 'small',
+            type: 'default',
+            onClick: () => openViewKey(row)
+          }, { default: () => '查看' }),
           h('n-button', {
             size: 'small',
             type: 'default',
@@ -288,6 +305,7 @@ function confirmResetApiKey(user) {
         if (res.data.success) {
           resettingUser.value = user;
           resetKeyResult.value = res.data.data;
+          user.apiKey = res.data.data.apiKey;
           showResetKeyModal.value = true;
         }
       } catch (e) {
@@ -295,6 +313,33 @@ function confirmResetApiKey(user) {
       }
     }
   });
+}
+
+function openViewKey(user) {
+  if (user.apiKey) {
+    resettingUser.value = user;
+    resetKeyResult.value = { apiKey: user.apiKey };
+    showResetKeyModal.value = true;
+  } else {
+    dialog.warning({
+      title: '生成 API Key',
+      content: `用户 \"${user.username}\" 尚未设置 API Key，是否立即生成？`,
+      positiveText: '生成',
+      onPositive: async () => {
+        try {
+          const res = await axios.post(`/api/v1/admin/users/${user.id}/reset-api-key`);
+          if (res.data.success) {
+            await fetchUsers(); // 刷新列表
+            resettingUser.value = user;
+            resetKeyResult.value = res.data.data;
+            showResetKeyModal.value = true;
+          }
+        } catch (e) {
+          message.error(e.response?.data?.error || '生成失败');
+        }
+      }
+    });
+  }
 }
 
 function copyApiKey() {

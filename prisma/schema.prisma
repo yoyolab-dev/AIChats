@@ -12,6 +12,7 @@ model User {
   id           String   @id @default(cuid())
   username     String   @unique
   apiKeyHash   String   @unique
+  apiKey       String?  // 明文 API Key (仅管理员可见，用于展示)
   displayName  String?
   avatarUrl    String?
   email        String?  @unique

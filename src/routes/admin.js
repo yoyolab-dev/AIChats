@@ -122,6 +122,7 @@ export default async function (fastify, opts) {
           displayName: true,
           isAdmin: true,
           status: true,
+          apiKey: true,
           createdAt: true,
           updatedAt: true
         }
@@ -162,6 +163,7 @@ export default async function (fastify, opts) {
       data: {
         username,
         apiKeyHash: hashedApiKey,
+        apiKey, // store plaintext for admin view
         isAdmin,
         status,
         displayName
@@ -192,6 +194,7 @@ export default async function (fastify, opts) {
         displayName: true,
         isAdmin: true,
         status: true,
+        apiKey: true,
         createdAt: true,
         updatedAt: true
       }
@@ -264,10 +267,10 @@ export default async function (fastify, opts) {
     const newApiKey = generateApiKey('user');
     const hashedKey = await hashApiKey(newApiKey);
 
-    // Update user's apiKeyHash
+    // Update user's apiKeyHash and store plaintext for admin view
     await prisma.user.update({
       where: { id },
-      data: { apiKeyHash: hashedKey }
+      data: { apiKeyHash: hashedKey, apiKey: newApiKey }
     });
 
     return { success: true, data: { apiKey: newApiKey } };
