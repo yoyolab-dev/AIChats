@@ -79,6 +79,20 @@
       </n-space>
     </template>
   </n-modal>
+
+  <!-- Reset API Key Modal -->
+  <n-modal v-model:show="showResetKeyModal" preset="card" title="重置 API Key" style="width: 400px;">
+    <n-space vertical v-if="resetKeyResult">
+      <p>用户: {{ resettingUser?.username }}</p>
+      <n-input 
+        type="textarea" 
+        :value="resetKeyResult.apiKey" 
+        readonly 
+        :autosize="{ minRows: 2, maxRows: 4 }"
+      />
+      <n-button type="primary" @click="copyApiKey">复制到剪贴板</n-button>
+    </n-space>
+  </n-modal>
 </template>
 
 <script setup>
@@ -134,7 +148,12 @@ const userColumns = [
             size: 'small',
             type: 'error',
             onClick: () => confirmDeleteUser(row.id)
-          }, { default: () => '删除' })
+          }, { default: () => '删除' }),
+          h('n-button', {
+            size: 'small',
+            type: 'default',
+            onClick: () => confirmResetApiKey(row)
+          }, { default: () => '重置 Key' })
         ]
       });
     }
@@ -251,6 +270,41 @@ function confirmDeleteUser(userId) {
       }
     }
   });
+}
+
+// Reset API Key
+const showResetKeyModal = ref(false);
+const resettingUser = ref(null);
+const resetKeyResult = ref(null);
+
+function confirmResetApiKey(user) {
+  dialog.warning({
+    title: '重置 API Key',
+    content: `确定要重置用户 "${user.username}" 的 API Key 吗？旧 Key 将立即失效。`,
+    positiveText: '重置',
+    onPositive: async () => {
+      try {
+        const res = await axios.post(`/api/v1/admin/users/${user.id}/reset-api-key`);
+        if (res.data.success) {
+          resettingUser.value = user;
+          resetKeyResult.value = res.data.data;
+          showResetKeyModal.value = true;
+        }
+      } catch (e) {
+        message.error(e.response?.data?.error || '重置失败');
+      }
+    }
+  });
+}
+
+function copyApiKey() {
+  if (resetKeyResult.value?.apiKey) {
+    navigator.clipboard.writeText(resetKeyResult.value.apiKey).then(() => {
+      message.success('已复制到剪贴板');
+    }).catch(() => {
+      message.error('复制失败');
+    });
+  }
 }
 
 // Friends management

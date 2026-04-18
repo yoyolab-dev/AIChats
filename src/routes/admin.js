@@ -1,6 +1,7 @@
 import { authenticate } from '../plugins/auth.js';
 import { prisma } from '../plugins/prisma.js';
 import bcrypt from 'bcryptjs';
+import { generateApiKey, hashApiKey } from '../utils/apiKey.js';
 
 export default async function (fastify, opts) {
   // All admin routes require authentication
@@ -247,6 +248,29 @@ export default async function (fastify, opts) {
     });
 
     return { success: true, data: user };
+  });
+
+  // POST /api/v1/admin/users/:id/reset-api-key
+  fastify.post('/users/:id/reset-api-key', async (request, reply) => {
+    const { id } = request.params;
+
+    // Verify target user exists
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return reply.code(404).send({ success: false, error: 'User not found' });
+    }
+
+    // Generate new API key
+    const newApiKey = generateApiKey('user');
+    const hashedKey = await hashApiKey(newApiKey);
+
+    // Update user's apiKeyHash
+    await prisma.user.update({
+      where: { id },
+      data: { apiKeyHash: hashedKey }
+    });
+
+    return { success: true, data: { apiKey: newApiKey } };
   });
 
   // GET /api/v1/admin/users/:userId/friends
