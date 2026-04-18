@@ -21,17 +21,13 @@ model User {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  // 旧会话消息关系 (保留以迁移)
-  sentMessages         ConversationMessage[]
-  conversationReads   ConversationRead[]
-
   // 好友关系
   receivedFriendships Friendship[] @relation("UserFriends")
   friendOf           Friendship[] @relation("FriendOf")
 
   // 直接消息 (新)
-  directMessagesSent     Message[] @relation("SentMessages")
-  directMessagesReceived Message[] @relation("ReceivedMessages")
+  directMessagesSent     DirectMessage[] @relation("SentMessages")
+  directMessagesReceived DirectMessage[] @relation("ReceivedMessages")
 
   // 群组
   ownedGroups          Group[]            @relation("GroupOwner")
@@ -65,12 +61,12 @@ model Conversation {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  messages        ConversationMessage[] @relation("ConversationMessages")
-  lastMessage     ConversationMessage? @relation(name: "ConversationLastMessage", fields: [lastMessageId], references: [id])
+  messages        Message[] @relation("ConversationMessages")
+  lastMessage     Message? @relation(name: "ConversationLastMessage", fields: [lastMessageId], references: [id])
 }
 
 // 会话消息 (旧系统，映射到现有表 "Message")
-model ConversationMessage {
+model Message {
   id              String   @id @default(cuid())
   conversationId  String
   senderId        String
@@ -84,7 +80,7 @@ model ConversationMessage {
   conversation   Conversation @relation("ConversationMessages", fields: [conversationId], references: [id])
   lastMessageOf  Conversation? @relation(name: "ConversationLastMessage")
   sender         User @relation(fields: [senderId], references: [id])
-  reads          ConversationRead[]
+  reads          MessageRead[]
 
   @@index([conversationId])
   @@index([senderId])
@@ -94,14 +90,14 @@ model ConversationMessage {
 }
 
 // 消息已读状态 (旧系统，映射到现有表 "MessageRead")
-model ConversationRead {
+model MessageRead {
   id         String   @id @default(cuid())
   messageId  String
   userId     String
   readAt     DateTime @default(now())
 
-  message    ConversationMessage @relation(fields: [messageId], references: [id])
-  user       User              @relation(fields: [userId], references: [id])
+  message    Message @relation(fields: [messageId], references: [id])
+  user       User   @relation(fields: [userId], references: [id])
 
   @@unique([messageId, userId])
   @@index([userId])
@@ -110,7 +106,7 @@ model ConversationRead {
 }
 
 // 直接消息 (新系统)
-model Message {
+model DirectMessage {
   id          String   @id @default(cuid())
   senderId    String
   receiverId  String?
