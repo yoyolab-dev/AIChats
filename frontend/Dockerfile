@@ -2,14 +2,9 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# Ensure dev dependencies are installed
-ENV NODE_ENV=development
-
 # Install dependencies
 COPY package*.json ./
-RUN npm install --no-audit --no-fund && \
-    ls -la node_modules/.bin && \
-    test -x node_modules/.bin/vite
+RUN npm ci --no-audit --no-fund
 
 # Copy source
 COPY . .
