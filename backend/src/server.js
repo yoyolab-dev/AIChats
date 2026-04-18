@@ -1,6 +1,9 @@
 import Fastify from 'fastify';
 import { authMiddleware } from './plugins/auth.js';
 import * as usersRoutes from './routes/users.routes.js';
+import * as friendshipsRoutes from './routes/friendships.routes.js';
+import * as messagesRoutes from './routes/messages.routes.js';
+import * as groupsRoutes from './routes/groups.routes.js';
 
 const fastify = Fastify({
   logger: true,
@@ -17,6 +20,24 @@ fastify.get('/api/v1/users', { onRequest: [authMiddleware] }, usersRoutes.listUs
 fastify.get('/api/v1/users/:id', { onRequest: [authMiddleware] }, usersRoutes.getUserHandler);
 fastify.put('/api/v1/users/:id', { onRequest: [authMiddleware] }, usersRoutes.updateUserHandler);
 fastify.delete('/api/v1/users/:id', { onRequest: [authMiddleware] }, usersRoutes.deleteUserHandler);
+
+// 好友路由（需要鉴权）
+fastify.get('/api/v1/friends', { onRequest: [authMiddleware] }, friendshipsRoutes.listFriendsHandler);
+fastify.post('/api/v1/friends', { onRequest: [authMiddleware] }, friendshipsRoutes.sendFriendRequestHandler);
+fastify.put('/api/v1/friends/:id', { onRequest: [authMiddleware] }, friendshipsRoutes.updateFriendStatusHandler);
+fastify.delete('/api/v1/friends/:id', { onRequest: [authMiddleware] }, friendshipsRoutes.deleteFriendHandler);
+
+// 消息路由（需要鉴权）
+fastify.get('/api/v1/messages', { onRequest: [authMiddleware] }, messagesRoutes.getMessagesHandler);
+fastify.post('/api/v1/messages', { onRequest: [authMiddleware] }, messagesRoutes.sendMessageHandler);
+
+// 群组路由（需要鉴权）
+fastify.post('/api/v1/groups', { onRequest: [authMiddleware] }, groupsRoutes.createGroupHandler);
+fastify.get('/api/v1/groups', { onRequest: [authMiddleware] }, groupsRoutes.listGroupsHandler);
+fastify.post('/api/v1/groups/:groupId/members', { onRequest: [authMiddleware] }, groupsRoutes.addGroupMemberHandler);
+fastify.delete('/api/v1/groups/:groupId/members/:userId', { onRequest: [authMiddleware] }, groupsRoutes.removeGroupMemberHandler);
+fastify.get('/api/v1/groups/:groupId/messages', { onRequest: [authMiddleware] }, groupsRoutes.getGroupMessagesHandler);
+fastify.post('/api/v1/groups/:groupId/messages', { onRequest: [authMiddleware] }, groupsRoutes.sendGroupMessageHandler);
 
 // 健康检查
 fastify.get('/health', async () => ({ status: 'ok' }));
