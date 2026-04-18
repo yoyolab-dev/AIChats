@@ -1,3 +1,6 @@
+// Ensure all Prisma instances use the same test database
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/aichats_test';
+
 import { PrismaClient } from '@prisma/client';
 import http from 'node:http';
 import { parse } from 'node:url';
