@@ -1,4 +1,4 @@
-import { createClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import http from 'node:http';
 import { parse } from 'node:url';
 
@@ -81,7 +81,7 @@ beforeAll(async () => {
   await fastify.listen({ port: 0, host: '127.0.0.1' });
   server = fastify.server;
 
-  prisma = new createClient({
+  prisma = new PrismaClient({
     datasourceUrl: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/aichats_test'
   });
 });
