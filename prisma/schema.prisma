@@ -29,6 +29,10 @@ model User {
   directMessagesSent     DirectMessage[] @relation("SentMessages")
   directMessagesReceived DirectMessage[] @relation("ReceivedMessages")
 
+  // 旧会话消息关系 (保留以迁移)
+  sentConversationMessages Message[]      @relation("SentConversationMessages")
+  messageReads            MessageRead[]  @relation("MessageReads")
+
   // 群组
   ownedGroups          Group[]            @relation("GroupOwner")
   groupMemberships     GroupMember[]
@@ -79,7 +83,7 @@ model Message {
 
   conversation   Conversation @relation("ConversationMessages", fields: [conversationId], references: [id])
   lastMessageOf  Conversation? @relation(name: "ConversationLastMessage")
-  sender         User @relation(fields: [senderId], references: [id])
+  sender         User @relation("SentConversationMessages", fields: [senderId], references: [id])
   reads          MessageRead[]
 
   @@index([conversationId])
@@ -97,7 +101,7 @@ model MessageRead {
   readAt     DateTime @default(now())
 
   message    Message @relation(fields: [messageId], references: [id])
-  user       User   @relation(fields: [userId], references: [id])
+  user       User   @relation("MessageReads", fields: [userId], references: [id])
 
   @@unique([messageId, userId])
   @@index([userId])
