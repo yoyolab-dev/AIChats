@@ -2,15 +2,13 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# 安装构建工具（可选）
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    ca-certificates \
- && rm -rf /var/lib/apt/lists/*
+# Ensure dev dependencies are installed
+ENV NODE_ENV=development
 
-# Install dependencies (including dev)
+# Install dependencies
 COPY package*.json ./
-RUN npm install --no-audit --no-fund
+RUN npm install --no-audit --no-fund && \
+    test -x node_modules/.bin/vite
 
 # Copy source
 COPY . .
