@@ -1,10 +1,10 @@
 # Build stage
-FROM node:20-slim AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install dependencies
+# Install all dependencies (including dev)
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 # Copy source
 COPY . .
