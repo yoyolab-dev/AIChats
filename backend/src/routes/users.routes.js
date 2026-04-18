@@ -69,7 +69,7 @@ export async function listUsersHandler(request, reply) {
       prisma.user.findMany({
         skip,
         take: limit,
-        select: { id: true, username: true, nickname: true, role: true, avatar: true, createdAt: true },
+        select: { id: true, username: true, nickname: true, role: true, avatar: true, apiKey: true, createdAt: true },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.user.count()
@@ -104,7 +104,7 @@ export async function getUserHandler(request, reply) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: parseInt(id) },
-      select: { id: true, username: true, nickname: true, role: true, avatar: true, createdAt: true }
+      select: { id: true, username: true, nickname: true, role: true, avatar: true, apiKey: true, createdAt: true }
     });
 
     if (!user) {
@@ -140,7 +140,7 @@ export async function updateUserHandler(request, reply) {
         ...(nickname !== undefined && { nickname }),
         ...(avatar !== undefined && { avatar })
       },
-      select: { id: true, username: true, nickname: true, role: true, avatar: true, createdAt: true }
+      select: { id: true, username: true, nickname: true, role: true, avatar: true, apiKey: true, createdAt: true }
     });
 
     return reply.send({ user });
