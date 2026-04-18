@@ -67,20 +67,16 @@ export default async function (fastify, opts) {
     if (!['accepted', 'rejected', 'blocked'].includes(status)) {
       return reply.code(400).send({ success: false, error: 'Invalid status' });
     }
-    const targetUser = await prisma.user.findUnique({ where: { username } });
-    if (!targetUser) {
-      return reply.code(404).send({ success: false, error: 'User not found' });
-    }
-    const meId = request.user.id;
-    const friendId = targetUser.id;
-    // Find any friendship between me and target in either direction
+
+    // Find any friendship where the other party's username matches, regardless of direction
     const friendship = await prisma.friendship.findFirst({
       where: {
         OR: [
-          { userId: meId, friendId },
-          { userId: friendId, friendId: meId }
+          { userId: request.user.id, friend: { username } },
+          { friendId: request.user.id, user: { username } }
         ]
-      }
+      },
+      include: { user: true, friend: true }
     });
     if (!friendship) {
       return reply.code(404).send({ success: false, error: 'Friendship not found' });
@@ -96,18 +92,12 @@ export default async function (fastify, opts) {
   // DELETE /api/v1/users/me/friends/:username
   fastify.delete('/friends/:username', async (request, reply) => {
     const { username } = request.params;
-    const targetUser = await prisma.user.findUnique({ where: { username } });
-    if (!targetUser) {
-      return reply.code(404).send({ success: false, error: 'User not found' });
-    }
-    const meId = request.user.id;
-    const friendId = targetUser.id;
-    // Find the friendship either as requester or receiver
+    // Find any friendship where the other party's username matches
     const friendship = await prisma.friendship.findFirst({
       where: {
         OR: [
-          { userId: meId, friendId },
-          { userId: friendId, friendId: meId }
+          { userId: request.user.id, friend: { username } },
+          { friendId: request.user.id, user: { username } }
         ]
       }
     });
