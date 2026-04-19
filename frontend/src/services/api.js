@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://api.oujun.work';
+const apiBase = (import.meta.env.VITE_API_BASE_URL || 'https://api.oujun.work').replace(/\/$/, '') + '/api/v1';
 
 const http = axios.create({
   baseURL: apiBase,
