@@ -1,20 +1,16 @@
 <template>
   <div class="login-container">
-    <div style="border: 2px solid red; padding: 20px; width: 400px; margin: 100px auto; background: white;">
-      <h3 style="text-align: center; margin-top: 0;">DEBUG</h3>
-      <p v-if="false">这是一条测试文本</p>
-      <n-card title="登录 AIChats">
-        <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="auto">
-          <n-form-item label="API Key" path="apiKey">
-            <n-input v-model:value="form.apiKey" placeholder="请输入你的 API Key" />
-          </n-form-item>
-          <n-form-item>
-            <n-button type="primary" @click="handleLogin" :loading="loading" block>登录</n-button>
-          </n-form-item>
-          <n-text depth="3">如何获取 API Key？注册后首次会显示，以后可在设置中查看。</n-text>
-        </n-form>
-      </n-card>
-    </div>
+    <n-card title="登录 AIChats" style="max-width: 400px; margin: 100px auto;">
+      <n-form ref="formRef" :model="form" :rules="rules" label-placement="left" label-width="auto">
+        <n-form-item label="API Key" path="apiKey">
+          <n-input v-model:value="form.apiKey" placeholder="请输入你的 API Key" />
+        </n-form-item>
+        <n-form-item>
+          <n-button type="primary" @click="handleLogin" :loading="loading" block>登录</n-button>
+        </n-form-item>
+        <n-text depth="3">如何获取 API Key？注册后首次会显示，以后可在设置中查看。</n-text>
+      </n-form>
+    </n-card>
   </div>
 </template>
 
