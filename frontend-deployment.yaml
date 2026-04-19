@@ -8,7 +8,7 @@ metadata:
     "traefik.http.routers.aichats-frontend.rule": "Host(`pm.oujun.work`)"
     "traefik.http.routers.aichats-frontend.entrypoints": "websecure"
     "traefik.http.routers.aichats-frontend.tls.certresolver": "cloudflare"
-    "traefik.http.services.aichats-frontend.loadbalancer.server.port": "80"
+    "traefik.http.services.aichats-frontend.loadbalancer.server.port": "8100"
 spec:
   containers:
     - name: aichats-frontend
@@ -16,5 +16,5 @@ spec:
       env:
         - name: VITE_API_BASE_URL
           value: "https://api.oujun.work"
-      # No ports defined; Traefik will connect to container IP on port 80
+      # No host ports; Traefik connects to container port 8100
       restartPolicy: Always
