@@ -40,14 +40,14 @@ async function handleLogin() {
 
   loading.value = true;
   try {
+    // 先设置 Authorization header
+    http.defaults.headers.common['Authorization'] = `Bearer ${form.apiKey}`;
     // 使用提供的 API Key 获取当前用户信息
     const response = await http.get('/users/me');
     const userData = response.data.user;
-    // 将 apiKey 和 user 保存到状态
+    // 将 apiKey 和 user 保存到本地
     localStorage.setItem('apiKey', form.apiKey);
     localStorage.setItem('user', JSON.stringify(userData));
-    // 设置 axios 默认 header
-    http.defaults.headers.common['Authorization'] = `Bearer ${form.apiKey}`;
     message.success('登录成功');
     router.push('/chat');
   } catch (error) {
