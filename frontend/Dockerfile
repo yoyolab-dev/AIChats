@@ -2,14 +2,11 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies (including dev)
+ENV NODE_ENV=development
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund
-
-# Copy source
 COPY . .
-
-# Build
 RUN npm run build
 
 # Production stage
