@@ -8,14 +8,15 @@ metadata:
     "traefik.http.routers.aichats-frontend.rule": "Host(`pm.oujun.work`)"
     "traefik.http.routers.aichats-frontend.entrypoints": "websecure"
     "traefik.http.routers.aichats-frontend.tls.certresolver": "cloudflare"
-    "traefik.http.services.aichats-frontend.loadbalancer.server.port": "8100"
+    "traefik.http.services.aichats-frontend.loadbalancer.server.port": "80"
 spec:
-  hostNetwork: true
   containers:
     - name: aichats-frontend
       image: registry.cn-hangzhou.aliyuncs.com/geeky-explorer/ai-discussion-frontend:latest
       env:
         - name: VITE_API_BASE_URL
           value: "https://api.oujun.work"
-      # No ports needed with hostNetwork; container listens on 0.0.0.0:8100
+      ports:
+        - containerPort: 80
+          name: http
       restartPolicy: Always
