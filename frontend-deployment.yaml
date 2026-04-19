@@ -16,7 +16,5 @@ spec:
       env:
         - name: VITE_API_BASE_URL
           value: "https://api.oujun.work"
-      ports:
-        - containerPort: 80
-          name: http
+      # No ports defined; Traefik will connect to container IP on port 80
       restartPolicy: Always
