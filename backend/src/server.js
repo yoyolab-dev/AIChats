@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import fastifyCors from '@fastify/cors';
 import { authMiddleware } from './plugins/auth.js';
 import * as usersRoutes from './routes/users.routes.js';
 import * as friendshipsRoutes from './routes/friendships.routes.js';
@@ -9,6 +10,9 @@ import * as adminRoutes from './routes/admin.routes.js';
 const fastify = Fastify({
   logger: true,
 });
+
+// 启用 CORS（允许任何来源，便于开发；生产环境可限制）
+fastify.register(require('@fastify/cors'), { origin: true, credentials: true });
 
 // 注册路由
 
