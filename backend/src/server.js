@@ -12,7 +12,7 @@ const fastify = Fastify({
 });
 
 // 启用 CORS（允许任何来源，便于开发；生产环境可限制）
-fastify.register(require('@fastify/cors'), { origin: true, credentials: true });
+fastify.register(fastifyCors, { origin: true, credentials: true });
 
 // 注册路由
 
