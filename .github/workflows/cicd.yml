@@ -88,8 +88,8 @@ jobs:
           build-args: |
             NODE_ENV=production
           tags: |
-            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:latest
-            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:${{ steps.version.outputs.VERSION }}
+            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aichats-backend:latest
+            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aichats-backend:${{ steps.version.outputs.VERSION }}
 
       - name: 构建并推送前端镜像
         uses: docker/build-push-action@v5
@@ -99,7 +99,7 @@ jobs:
           push: true
           no-cache: true
           tags: |
-            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
+            ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aichats-frontend:latest
 
       - name: Prepare deployment manifests
         run: |
@@ -176,7 +176,7 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
-            podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/ai-discussion-frontend:latest
+            podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aichats-frontend:latest
             podman kube play --replace deployment.yaml
             echo "Frontend deployed"
           EOF

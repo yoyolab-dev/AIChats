@@ -12,7 +12,7 @@ metadata:
 spec:
   containers:
     - name: aichats-frontend
-      image: registry.cn-hangzhou.aliyuncs.com/geeky-explorer/ai-discussion-frontend:latest
+      image: registry.cn-hangzhou.aliyuncs.com/geeky-explorer/aichats-frontend:latest
       env:
         - name: VITE_API_BASE_URL
           value: "https://api.oujun.work"

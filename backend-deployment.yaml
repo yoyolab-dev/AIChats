@@ -13,7 +13,7 @@ spec:
   hostNetwork: true
   containers:
     - name: aichats-backend
-      image: registry.cn-hangzhou.aliyuncs.com/geeky-explorer/aidiscussion:latest
+      image: registry.cn-hangzhou.aliyuncs.com/geeky-explorer/aichats-backend:latest
       env:
         - name: DATABASE_URL
           value: "postgresql://postgres:postgres@localhost:5432/aichats"
