@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-PORT=8300
+# 使用随机端口避免冲突
+PORT=$((8300 + RANDOM % 1000))
 BASE="http://localhost:${PORT}"
 DB_FILE="${PWD}/dev.db"
 
@@ -13,16 +14,29 @@ cd "$(dirname "$0")/../.."
 export PORT=$PORT
 npm run dev > /tmp/backend.log 2>&1 &
 DEV_PID=$!
-trap "kill $DEV_PID 2>/dev/null; exit" EXIT
+DEV_PID=$!
+trap 'kill $DEV_PID 2>/dev/null; exit' EXIT
 
 sleep 6
+# 等待端口就绪
+for i in {1..30}; do
+  if curl -s "$BASE/health" >/dev/null 2>&1; then break; fi
+  # 超时后显示日志
+  if [ $i -eq 30 ]; then
+    echo "\n❌ Server did not start in time. Last logs:"
+    tail -n 50 /tmp/backend.log || true
+    exit 1
+  fi
+  sleep 1
+done
 
 # 健康检查
-if curl -s "$BASE/health" | grep -q '"status":"ok"'; then
+HEALTH=$(curl -s "$BASE/health" || echo '{}')
+if echo "$HEALTH" | grep -q '"status":"ok"'; then
   echo "✅ Health"
 else
-  echo "❌ Health failed"
-  cat /tmp/backend.log | tail -20
+  echo "❌ Health failed: $HEALTH"
+  tail -n 30 /tmp/backend.log || true
   exit 1
 fi
 
