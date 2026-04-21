@@ -9,11 +9,16 @@ import { fileURLToPath } from 'url';
 import { authPlugin } from './plugins/auth';
 import { adminPlugin } from './plugins/admin';
 import { wsManager } from './services/wsManager';
+import { metricsPlugin } from './plugins/metrics';
 import { usersRoutes } from './routes/users';
 import { friendsRoutes } from './routes/friends';
 import { chatRoutes } from './routes/chat';
 import { groupsRoutes } from './routes/groups';
 import { adminRoutes } from './routes/admin';
+
+// 全局暴露 WS 管理器 (供 metrics 使用)
+
+global.wsManager = wsManager;
 
 // 加载环境变量
 config();
@@ -42,11 +47,13 @@ async function buildApp() {
     keyGenerator: (req) => req.user?.id || req.ip,
   });
 
+  await app.register(metricsPlugin);
+
   await app.register(authPlugin);
   // 装饰 authenticateAdmin 方法
   app.decorate('authenticateAdmin', async (request: any, reply: any) => {
-    if (request.user.role !== 'ADMIN') {
-      throw fastify.httpErrors.forbidden('Admin access required');
+    if (request.user?.role !== 'ADMIN') {
+      throw app.httpErrors.forbidden('Admin access required');
     }
   });
 
@@ -110,10 +117,10 @@ async function buildApp() {
       });
     }
 
-    if (error.httpStatus) {
-      return reply.code(error.httpStatus).send({
+    if (error.statusCode) {
+      return reply.code(error.statusCode).send({
         success: false,
-        error: { code: error.httpStatus, message: error.message },
+        error: { code: error.statusCode, message: error.message },
       });
     }
 
@@ -135,7 +142,12 @@ async function buildApp() {
   return app;
 }
 
-buildApp()
+// 导出供测试使用
+export { buildApp };
+
+// 非测试环境才启动服务器
+if (process.env.NODE_ENV !== 'test') {
+  buildApp()
   .then((app) => {
     const port = parseInt(process.env.PORT || '8200', 10);
     const host = process.env.HOST || '0.0.0.0';
@@ -152,3 +164,4 @@ buildApp()
     console.error('Failed to start server:', err);
     process.exit(1);
   });
+}
