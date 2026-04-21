@@ -222,4 +222,141 @@ export async function chatRoutes(fastify: FastifyInstance) {
       return { success: true, data: { count } };
     }
   );
+
+  // ============================================
+  // 群聊消息 (B24-B25)
+  // ============================================
+
+  // GET /api/v1/chat/group/:groupId/messages
+  fastify.get(
+    '/api/v1/chat/group/:groupId/messages',
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          properties: {
+            before: { type: 'string', format: 'date-time' },
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            required: ['success', 'data'],
+            properties: {
+              success: { type: 'boolean' },
+              data: {
+                type: 'object',
+                required: ['messages', 'hasMore'],
+                properties: {
+                  messages: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['id', 'groupId', 'senderId', 'content', 'type', 'createdAt', 'sender'],
+                      properties: {
+                        id: { type: 'string' },
+                        groupId: { type: 'string' },
+                        senderId: { type: 'string' },
+                        content: { type: 'string' },
+                        type: { type: 'string' },
+                        replyToId: { type: ['string', 'null'] },
+                        createdAt: { type: 'string', format: 'date-time' },
+                        sender: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string' },
+                            username: { type: 'string' },
+                            nickname: { type: ['string', 'null'] },
+                            avatar: { type: ['string', 'null'] },
+                          },
+                        },
+                        replyTo: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string' },
+                            content: { type: 'string' },
+                            sender: {
+                              type: 'object',
+                              properties: {
+                                username: { type: 'string' },
+                                nickname: { type: ['string', 'null'] },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  hasMore: { type: 'boolean' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request) => {
+      const { groupId } = request.params as { groupId: string };
+      const { before, limit = 50 } = request.query as { before?: string; limit?: number };
+      const result = await chatService.getGroupChatHistory(groupId, limit, before);
+      return { success: true, data: result };
+    }
+  );
+
+  // POST /api/v1/chat/group/:groupId/send
+  fastify.post(
+    '/api/v1/chat/group/:groupId/send',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['content'],
+          properties: {
+            content: { type: 'string', maxLength: 5000 },
+            type: { type: 'string', enum: ['text', 'image', 'file', 'sticker'], default: 'text' },
+            replyToId: { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+        response: {
+          200: {
+            type: 'object',
+            required: ['success', 'data'],
+            properties: {
+              success: { type: 'boolean' },
+              data: {
+                type: 'object',
+                required: ['id', 'groupId', 'senderId', 'content', 'type', 'createdAt'],
+                properties: {
+                  id: { type: 'string' },
+                  groupId: { type: 'string' },
+                  senderId: { type: 'string' },
+                  content: { type: 'string' },
+                  type: { type: 'string' },
+                  replyToId: { type: ['string', 'null'] },
+                  createdAt: { type: 'string', format: 'date-time' },
+                  sender: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      username: { type: 'string' },
+                      nickname: { type: ['string', 'null'] },
+                      avatar: { type: ['string', 'null'] },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request) => {
+      const { groupId } = request.params as { groupId: string };
+      const { content, type = 'text', replyToId } = request.body;
+      const message = await chatService.sendGroupMessage(request.user.id, groupId, content, type, replyToId);
+      return { success: true, data: message };
+    }
+  );
 }

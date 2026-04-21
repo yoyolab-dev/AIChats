@@ -202,4 +202,116 @@ export class ChatService {
     const count = await prisma.message.count({ where });
     return count;
   }
+
+  /**
+   * 发送群聊消息
+   */
+  async sendGroupMessage(senderId: string, groupId: string, content: string, type: string = 'text', replyToId?: string) {
+    // 验证用户是群成员
+    const membership = await prisma.groupMember.findFirst({
+      where: { groupId, userId: senderId },
+    });
+    if (!membership) {
+      throw new Error('Not a group member');
+    }
+
+    // 创建消息
+    const message = await prisma.groupMessage.create({
+      data: {
+        groupId,
+        senderId,
+        content,
+        type,
+        ...(replyToId && { replyToId }),
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            avatar: true,
+          },
+        },
+        replyTo: {
+          select: {
+            id: true,
+            content: true,
+            sender: {
+              select: { username: true, nickname: true },
+            },
+          },
+        },
+      },
+    });
+
+    // WS 广播给群成员 (排除发送者)
+    const groupMembers = await prisma.groupMember.findMany({
+      where: { groupId },
+      select: { userId: true },
+    });
+    const memberIds = groupMembers.map(m => m.userId).filter(id => id !== senderId);
+
+    const payload = {
+      type: 'group_message',
+      payload: { message, groupId },
+    };
+    for (const id of memberIds) {
+      wsManager.sendToUser(id, payload);
+    }
+
+    return message;
+  }
+
+  /**
+   * 获取群聊消息历史
+   */
+  async getGroupChatHistory(groupId: string, limit: number = 50, before?: string) {
+    // 验证用户是群成员
+    const membership = await prisma.groupMember.findFirst({
+      where: { groupId },
+    });
+    if (!membership) {
+      throw new Error('Not a group member');
+    }
+
+    const where: any = { groupId };
+    if (before) {
+      where.createdAt = { lt: before };
+    }
+
+    const messages = await prisma.groupMessage.findMany({
+      where,
+      include: {
+        sender: {
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            avatar: true,
+          },
+        },
+        replyTo: {
+          select: {
+            id: true,
+            content: true,
+            sender: {
+              select: { username: true, nickname: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
+    });
+
+    const hasMore = messages.length > limit;
+    const data = messages.slice(0, limit);
+
+    return {
+      data,
+      hasMore,
+      nextCursor: hasMore ? data[data.length - 1].createdAt.toISOString() : null,
+    };
+  }
 }
