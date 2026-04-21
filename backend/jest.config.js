@@ -7,12 +7,15 @@ module.exports = {
       isolatedModules: true,
       useESM: true,
       tsconfig: 'tsconfig.json',
+      diagnostics: false,
     }],
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testTimeout: 30000,
-  // When using ESM, Jest needs extensionsToTreatAsEsm
   extensionsToTreatAsEsm: ['.ts'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*)/esm/(.*)|(.*)/mjs/(.*))'
+  ],
 };
