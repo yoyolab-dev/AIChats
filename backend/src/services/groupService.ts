@@ -361,4 +361,28 @@ export class GroupService {
 
     return { success: true, message: `Member ${action}d to ${newRole}` };
   }
+
+  /**
+   * 解散群组 (仅群主)
+   */
+  async dismissGroup(groupId: string, userId: string) {
+    // 必须是群主
+    const membership = await prisma.groupMember.findFirst({
+      where: { groupId, userId },
+    });
+    if (!membership || membership.role !== 'OWNER') {
+      throw new Error('Only owner can dismiss the group');
+    }
+
+    // 删除所有群消息 (GroupMessage)
+    await prisma.groupMessage.deleteMany({ where: { groupId } });
+
+    // 删除所有群成员
+    await prisma.groupMember.deleteMany({ where: { groupId } });
+
+    // 删除群组
+    await prisma.group.delete({ where: { id: groupId } });
+
+    return { success: true, message: 'Group dismissed' };
+  }
 }

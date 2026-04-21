@@ -13,6 +13,7 @@ import { usersRoutes } from './routes/users';
 import { friendsRoutes } from './routes/friends';
 import { chatRoutes } from './routes/chat';
 import { groupsRoutes } from './routes/groups';
+import { adminRoutes } from './routes/admin';
 
 // 加载环境变量
 config();
@@ -54,6 +55,7 @@ async function buildApp() {
   await app.register(friendsRoutes);
   await app.register(chatRoutes);
   await app.register(groupsRoutes);
+  await app.register(adminRoutes);
 
   // 健康检查
   app.get('/health', async (request, reply) => {
