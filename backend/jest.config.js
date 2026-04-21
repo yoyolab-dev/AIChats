@@ -4,17 +4,15 @@ module.exports = {
   testMatch: ['**/tests/**/*.spec.ts'],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
-      diagnostics: false,
       isolatedModules: true,
       useESM: true,
       tsconfig: 'tsconfig.json',
-      packageJson: true,
     }],
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  clearMocks: true,
-  // For ESM
+  testTimeout: 30000,
+  // When using ESM, Jest needs extensionsToTreatAsEsm
   extensionsToTreatAsEsm: ['.ts'],
 };
