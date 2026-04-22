@@ -11,20 +11,6 @@ jobs:
     permissions:
       contents: read
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: aichats_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -33,24 +19,17 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: 初始化测试数据库
-        env:
-          PGPASSWORD: postgres
-        run: |
-          # 测试数据库已自动创建，无需额外初始化
-          echo "测试数据库已就绪"
-
       - name: 同步数据库 Schema (测试库)
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aichats_test
+          DATABASE_URL: file:./dev.test.db
         run: npx prisma db push --accept-data-loss
 
       - name: 运行后端测试 (Jest)
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aichats_test
-          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aichats_test
+          DATABASE_URL: file:./dev.test.db
+          TEST_DATABASE_URL: file:./dev.test.db
           NODE_ENV: test
         run: npm test
 
