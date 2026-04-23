@@ -70,12 +70,22 @@ const friendId = computed(() => route.query.friend as string | undefined)
 const groupId = computed(() => route.query.group as string | undefined)
 const myId = ref<string | null>(null)
 
+function formatTime(ts: string) {
+  const d = new Date(ts)
+  return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
 const friendName = ref('Chat')
 const groupName = ref('Group')
 const messages = ref<any[]>([])
 const input = ref('')
 const sending = ref(false)
-let ws: WebSocket | null = null
+const ws = ref<WebSocket | null>(null)
+
+function closeWs() {
+  if (ws.value) ws.value.close()
+  ws.value = null
+}
 
 // 判断模式
 const isGroupMode = computed(() => !!groupId.value)
@@ -143,7 +153,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  ws?.close()
+  closeWs()
 })
 </script>
 

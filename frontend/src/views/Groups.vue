@@ -86,6 +86,11 @@ const groupInput = ref('')
 const sending = ref(false)
 const myId = ref('') // will be set when user data available
 
+function formatTime(ts: string) {
+  const d = new Date(ts)
+  return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
 const listTitle = computed(() => listType.value === 'joined' ? 'My Groups' : 'Public Groups')
 
 async function loadGroups() {
