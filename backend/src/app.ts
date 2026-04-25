@@ -4,7 +4,6 @@ import websocket from '@fastify/websocket';
 import rateLimit from '@fastify/rate-limit';
 import { config } from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 import { authPlugin } from './plugins/auth';
 import { adminPlugin } from './plugins/admin';
@@ -23,8 +22,7 @@ global.wsManager = wsManager;
 // 加载环境变量
 config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// CJS: __dirname is built-in
 
 async function buildApp() {
   const app = fastify({

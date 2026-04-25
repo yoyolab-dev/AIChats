@@ -1,6 +1,5 @@
 {
   "name": "aichats-backend",
-  "type": "module",
   "version": "1.0.0",
   "description": "AIChats Backend API - Fastify + TypeScript + Prisma",
   "main": "dist/app.js",
