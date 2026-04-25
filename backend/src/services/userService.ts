@@ -174,8 +174,8 @@ export class UserService {
           { id: { not: excludeUserId } },
           {
             OR: [
-              { username: { contains: keyword, mode: 'insensitive' } },
-              { nickname: { contains: keyword, mode: 'insensitive' } },
+              { username: { contains: keyword } },
+              { nickname: { contains: keyword } },
             ],
           },
         ],

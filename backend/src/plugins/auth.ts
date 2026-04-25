@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
 import { PrismaClient } from '@prisma/client';
 import { validateApiKeyFormat } from '@/utils/apiKey';
-import type { FastifyRequestUser } from '@/types/user';
+import type { FastifyRequestUser, Role } from '@/types/user';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -50,7 +50,7 @@ export async function authPlugin(fastify: FastifyInstance) {
       request.user = {
         id: user.id,
         username: user.username,
-        role: user.role,
+        role: user.role as Role,
       };
 
       // 更新在线状态心跳（可选，暂时注释）

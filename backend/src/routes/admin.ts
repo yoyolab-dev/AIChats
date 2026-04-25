@@ -25,8 +25,8 @@ export async function adminRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { userId: targetUserId } = request.params;
-      const { reason } = request.body;
+      const { userId: targetUserId } = request.params as { userId: string };
+      const { reason } = request.body as { reason: string };
       const result = await adminService.banUser(request.user.id, targetUserId, reason);
       return { success: true, message: result.message };
     }
@@ -46,7 +46,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { userId: targetUserId } = request.params;
+      const { userId: targetUserId } = request.params as { userId: string };
       const result = await adminService.unbanUser(request.user.id, targetUserId);
       return { success: true, message: result.message };
     }
@@ -66,7 +66,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { messageId } = request.params;
+      const { messageId } = request.params as { messageId: string };
       const result = await adminService.deleteMessage(request.user.id, messageId);
       return { success: true, message: result.message };
     }

@@ -28,7 +28,7 @@ const activeConnectionsGauge = new prom.Gauge({
 
 export async function metricsPlugin(fastify: FastifyInstance) {
   // 挂载到 fastify 以便外部更新
-  fastify.metrics = { activeConnectionsGauge, httpRequestsTotal, httpRequestDurationSeconds };
+      fastify.metrics = { registry: register, activeConnectionsGauge, requestCounter: httpRequestsTotal, requestDuration: httpRequestDurationSeconds };
 
   // 收集指标路由
   fastify.get('/metrics', async (request, reply) => {

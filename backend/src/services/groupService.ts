@@ -6,7 +6,7 @@ export class GroupService {
   /**
    * 创建群组
    */
-  async createGroup(ownerId: string, data: { name: string; description?: string; isPublic?: boolean; initialMemberIds?: string[] }) {
+  async createGroup(ownerId: string, data: { name: string; description?: string; isPublic?: boolean; initialMemberIds?: string[]; avatar?: string }) {
     const { name, description, isPublic = false, initialMemberIds = [] } = data;
 
     // 生成邀请码 (仅私密群)

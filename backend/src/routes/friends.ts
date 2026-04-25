@@ -60,7 +60,7 @@ export async function friendsRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { userId } = request.body;
+      const { userId } = request.body as { userId: string };
       const friendship = await friendshipService.sendRequest(request.user.id, userId);
       return { success: true, data: friendship };
     }
@@ -100,7 +100,7 @@ export async function friendsRoutes(fastify: FastifyInstance) {
     },
     async (request) => {
       const { requestId } = request.params as { requestId: string };
-      const { action } = request.body;
+      const { action } = request.body as { action: 'accept' | 'reject' };
       const friendship = await friendshipService.handleRequest(requestId, request.user.id, action);
       return { success: true, data: { id: friendship.id, status: friendship.status } };
     }

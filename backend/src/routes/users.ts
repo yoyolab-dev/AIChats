@@ -61,7 +61,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { username, nickname } = request.body;
+      const { username, nickname } = request.body as { username: string; nickname?: string };
       const user = await userService.register({ username, nickname });
       return { success: true, data: user };
     }
@@ -119,7 +119,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { nickname, avatar } = request.body;
+      const { nickname, avatar } = request.body as { nickname?: string; avatar?: string };
       const user = await userService.updateUser(request.user.id, { nickname, avatar });
       return { success: true, data: user };
     }
@@ -236,7 +236,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
     },
     async (request) => {
       const { page = 1, limit = 20, role, search } = request.query as z.infer<typeof paginationSchema>;
-      const result = await userService.getAllUsers({ page, limit, role, search });
+      const result = await userService.getAllUsers({ page, limit, role: role as Role | undefined, search });
       return { success: true, data: result };
     }
   );

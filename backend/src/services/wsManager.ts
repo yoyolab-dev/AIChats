@@ -86,7 +86,7 @@ class WebSocketManager {
    */
   sendToUser(userId: string, message: any) {
     const userConnections = this.connections.get(userId);
-    if (!userConnences || userConnections.length === 0) {
+    if (!userConnections || userConnections.length === 0) {
       return false;
     }
 

@@ -10,14 +10,22 @@ metadata:
     "traefik.http.routers.aichats-backend.tls.certresolver": "cloudflare"
     "traefik.http.services.aichats-backend.loadbalancer.server.port": "8200"
 spec:
-  hostNetwork: true
   containers:
     - name: aichats-backend
       image: registry.cn-hangzhou.aliyuncs.com/geeky-explorer/aichats-backend:latest
       env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:postgres@localhost:5432/aichats"
+          value: "file:/data/aichats.db"
         - name: NODE_ENV
           value: "production"
-      # No ports needed with hostNetwork; app listens on 0.0.0.0:8200
-      restartPolicy: Always
+        - name: PORT
+          value: "8200"
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      hostPath:
+        path: /opt/aichats/data
+        type: DirectoryOrCreate
+  restartPolicy: Always

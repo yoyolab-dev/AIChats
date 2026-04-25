@@ -1,20 +1,25 @@
-# Use Debian-based Node image for better compatibility with native modules like bcrypt
-FROM node:18-slim AS runner
+# Build stage - compile TypeScript
+FROM node:20-slim AS builder
 WORKDIR /app
-
-# Install dependencies (including dev for Prisma)
 COPY backend/package*.json ./
-RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 RUN npm ci
-
-# Copy source
 COPY backend/ .
-
-# Generate Prisma Client
+# Generate Prisma client
 RUN npx prisma generate
+# Compile TypeScript to dist/
+RUN npx tsc -p tsconfig.json
 
-# Expose port
+# Production stage
+FROM node:20-slim AS runner
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/package.json ./
+# Install production dependencies only
+RUN npm ci --omit=dev
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+ENV NODE_ENV=production
 EXPOSE 8200
-
-# Start server
-CMD ["node", "src/server.js"]
+CMD ["node", "dist/app.js"]

@@ -1,6 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { GroupService } from '@/services/groupService';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 export async function groupsRoutes(fastify: FastifyInstance) {
   const groupService = new GroupService();
@@ -72,7 +74,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const { name, description, isPublic = false, initialMemberIds = [], avatar } = request.body;
+      const { name, description, isPublic = false, initialMemberIds = [], avatar } = request.body as { name: string; description?: string; isPublic?: boolean; initialMemberIds?: string[]; avatar?: string };
       const group = await groupService.createGroup(request.user.id, {
         name,
         description,
@@ -215,7 +217,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const { groupId } = request.params as { groupId: string };
-      const { userId } = request.body;
+      const { userId } = request.body as { userId: string };
       await groupService.inviteMember(groupId, request.user.id, userId);
       return { success: true, message: 'Invitation sent' };
     }
@@ -254,7 +256,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const { inviteCode } = request.body;
+      const { inviteCode } = request.body as { inviteCode: string };
       const result = await groupService.joinWithInviteCode(request.user.id, inviteCode);
       return { success: true, data: result };
     }
@@ -282,7 +284,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const { groupId, userId: targetUserId } = request.params as { groupId: string; userId: string };
-      const { action } = request.body;
+      const { action } = request.body as { action: 'kick' | 'promote' | 'demote' };
       const result = await groupService.updateMemberRole(groupId, request.user.id, targetUserId, action);
       return { success: true, message: result.message };
     }

@@ -140,7 +140,7 @@ export async function chatRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { receiverId, content, type = 'text', replyToId } = request.body;
+      const { receiverId, content, type = 'text', replyToId } = request.body as { receiverId: string; content: string; type?: string; replyToId?: string };
       const message = await chatService.sendPrivateMessage(request.user.id, receiverId, content, type, replyToId);
       return { success: true, data: message };
     }
@@ -354,7 +354,7 @@ export async function chatRoutes(fastify: FastifyInstance) {
     },
     async (request) => {
       const { groupId } = request.params as { groupId: string };
-      const { content, type = 'text', replyToId } = request.body;
+      const { content, type = 'text', replyToId } = request.body as { content: string; type?: string; replyToId?: string };
       const message = await chatService.sendGroupMessage(request.user.id, groupId, content, type, replyToId);
       return { success: true, data: message };
     }
