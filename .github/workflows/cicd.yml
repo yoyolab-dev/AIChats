@@ -136,7 +136,7 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<EOF
             set -e
             cd /root
-            podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aidiscussion:latest
+            podman pull ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aichats-backend:latest
             podman kube play --replace deployment.yaml
             echo "Backend deployed"
           EOF
