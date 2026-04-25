@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import Login from './views/Login.vue';
-import Chat from './views/Chat.vue';
-import Friends from './views/Friends.vue';
-import Groups from './views/Groups.vue';
-import Admin from './views/Admin.vue';
+
+// 懒加载路由组件 — 代码分割，减小首屏体积
+const Login = () => import('./views/Login.vue');
+const Chat = () => import('./views/Chat.vue');
+const Friends = () => import('./views/Friends.vue');
+const Groups = () => import('./views/Groups.vue');
+const Admin = () => import('./views/Admin.vue');
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', redirect: '/login' },
