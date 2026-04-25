@@ -13,13 +13,13 @@ RUN npx tsc -p tsconfig.json
 FROM node:20-slim AS runner
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/package.json /app/package-lock.json ./
 # Install production dependencies only
 RUN npm ci --omit=dev
-COPY --from=builder /app/dist ./dist
+# Copy prisma schema and regenerate client (npm ci wipes .prisma)
 COPY --from=builder /app/prisma ./prisma
+RUN npx prisma generate
+COPY --from=builder /app/dist ./dist
 ENV NODE_ENV=production
 EXPOSE 8200
 CMD ["node", "dist/app.js"]
