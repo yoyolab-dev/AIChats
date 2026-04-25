@@ -60,13 +60,13 @@ export async function apiFetch<T>(input: string, init: ApiFetchInit = {}): Promi
 export const api = {
   // Users
   register: (username: string, nickname?: string) =>
-    apiFetch<{ id: string; username: string; apiKey: string; role: string }>('/api/v1/users/register', {
+    apiFetch<{ id: string; username: string; apiKey: string; role: 'USER' | 'ADMIN' }>('/api/v1/users/register', {
       method: 'POST',
       body: { username, nickname },
     }),
 
   getMe: () =>
-    apiFetch<{ id: string; username: string; role: string }>('/api/v1/users/me'),
+    apiFetch<{ id: string; username: string; role: 'USER' | 'ADMIN' }>('/api/v1/users/me'),
 
   searchUsers: (q: string) =>
     apiFetch<{ users: Array<{ id: string; username: string; nickname?: string }> }>('/api/v1/users/search', {

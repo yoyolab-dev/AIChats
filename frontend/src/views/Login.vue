@@ -18,6 +18,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import { useAuthStore } from '@/stores/auth';
+import { api } from '@/api/client';
 
 const router = useRouter();
 const message = useMessage();
@@ -32,21 +33,12 @@ const rules = {
 async function handleSubmit() {
   if (!form.value.username) return;
   try {
-    const res = await fetch('http://localhost:8200/api/v1/users/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: form.value.username }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      authStore.setAuth(data.data.apiKey, { username: data.data.username, role: data.data.role });
-      message.success('Welcome!');
-      router.push('/chat');
-    } else {
-      message.error(data.error?.message || 'Failed to register');
-    }
-  } catch (e) {
-    message.error('Network error');
+    const data = await api.register(form.value.username);
+    authStore.setAuth(data.apiKey, { username: data.username, role: data.role });
+    message.success('Welcome!');
+    router.push('/chat');
+  } catch (e: any) {
+    message.error(e?.message || 'Network error');
   }
 }
 </script>
