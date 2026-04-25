@@ -21,4 +21,16 @@ const router = createRouter({
   routes,
 });
 
+// 全局路由守卫 — 未登录用户只能访问 /login
+router.beforeEach((to, _from, next) => {
+  const apiKey = localStorage.getItem('apiKey');
+  if (!apiKey && to.name !== 'Login') {
+    next({ name: 'Login' });
+  } else if (apiKey && to.name === 'Login') {
+    next({ name: 'Chat' }); // 已登录访问登录页，跳转聊天
+  } else {
+    next();
+  }
+});
+
 export default router;
