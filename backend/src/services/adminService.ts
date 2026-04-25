@@ -72,21 +72,15 @@ export class AdminService {
    * 获取系统统计信息
    */
   async getStats() {
-    const [
-      userCount,
-      groupCount,
-      messageCount,
-      privateMsgCount,
-      groupMsgCount,
-      onlineUserCount,
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.group.count(),
-      prisma.message.count(),
-      prisma.groupMessage.count(),
-      prisma.message.count(),
-      prisma.user.count({ where: { isOnline: true } }),
-    ]);
+    const [userCount, groupCount, messageCount, privateMsgCount, groupMsgCount, onlineUserCount] =
+      await Promise.all([
+        prisma.user.count(),
+        prisma.group.count(),
+        prisma.message.count(),
+        prisma.groupMessage.count(),
+        prisma.message.count(),
+        prisma.user.count({ where: { isOnline: true } }),
+      ]);
 
     return {
       users: userCount,

@@ -29,7 +29,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
       const { reason } = request.body as { reason: string };
       const result = await adminService.banUser(request.user.id, targetUserId, reason);
       return { success: true, message: result.message };
-    }
+    },
   );
 
   // PATCH /api/v1/admin/users/:userId/unban
@@ -49,7 +49,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
       const { userId: targetUserId } = request.params as { userId: string };
       const result = await adminService.unbanUser(request.user.id, targetUserId);
       return { success: true, message: result.message };
-    }
+    },
   );
 
   // DELETE /api/v1/admin/messages/:messageId
@@ -69,7 +69,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
       const { messageId } = request.params as { messageId: string };
       const result = await adminService.deleteMessage(request.user.id, messageId);
       return { success: true, message: result.message };
-    }
+    },
   );
 
   // GET /api/v1/admin/stats
@@ -101,6 +101,6 @@ export async function adminRoutes(fastify: FastifyInstance) {
     async (request) => {
       const stats = await adminService.getStats();
       return { success: true, data: stats };
-    }
+    },
   );
 }

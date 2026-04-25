@@ -31,7 +31,16 @@ export async function chatRoutes(fastify: FastifyInstance) {
                     type: 'array',
                     items: {
                       type: 'object',
-                      required: ['id', 'senderId', 'receiverId', 'content', 'type', 'isRead', 'createdAt', 'sender'],
+                      required: [
+                        'id',
+                        'senderId',
+                        'receiverId',
+                        'content',
+                        'type',
+                        'isRead',
+                        'createdAt',
+                        'sender',
+                      ],
                       properties: {
                         id: { type: 'string' },
                         senderId: { type: 'string' },
@@ -85,9 +94,14 @@ export async function chatRoutes(fastify: FastifyInstance) {
       const { friendId } = request.params as { friendId: string };
       const { before, limit = 50 } = request.query as { before?: string; limit?: number };
 
-      const result = await chatService.getPrivateChatHistory(request.user.id, friendId, limit, before);
+      const result = await chatService.getPrivateChatHistory(
+        request.user.id,
+        friendId,
+        limit,
+        before,
+      );
       return { success: true, data: result };
-    }
+    },
   );
 
   // POST /api/v1/chat/private/send
@@ -140,10 +154,26 @@ export async function chatRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { receiverId, content, type = 'text', replyToId } = request.body as { receiverId: string; content: string; type?: string; replyToId?: string };
-      const message = await chatService.sendPrivateMessage(request.user.id, receiverId, content, type, replyToId);
+      const {
+        receiverId,
+        content,
+        type = 'text',
+        replyToId,
+      } = request.body as {
+        receiverId: string;
+        content: string;
+        type?: string;
+        replyToId?: string;
+      };
+      const message = await chatService.sendPrivateMessage(
+        request.user.id,
+        receiverId,
+        content,
+        type,
+        replyToId,
+      );
       return { success: true, data: message };
-    }
+    },
   );
 
   // PATCH /api/v1/chat/private/:friendId/read
@@ -184,7 +214,7 @@ export async function chatRoutes(fastify: FastifyInstance) {
       const { messageIds } = request.body as { messageIds?: string[] };
       const count = await chatService.markAsRead(request.user.id, friendId, messageIds);
       return { success: true, data: { markedCount: count } };
-    }
+    },
   );
 
   // GET /api/v1/chat/private/unread-count
@@ -220,7 +250,7 @@ export async function chatRoutes(fastify: FastifyInstance) {
       const { senderId } = request.query as { senderId?: string };
       const count = await chatService.getUnreadCount(request.user.id, senderId);
       return { success: true, data: { count } };
-    }
+    },
   );
 
   // ============================================
@@ -253,7 +283,15 @@ export async function chatRoutes(fastify: FastifyInstance) {
                     type: 'array',
                     items: {
                       type: 'object',
-                      required: ['id', 'groupId', 'senderId', 'content', 'type', 'createdAt', 'sender'],
+                      required: [
+                        'id',
+                        'groupId',
+                        'senderId',
+                        'content',
+                        'type',
+                        'createdAt',
+                        'sender',
+                      ],
                       properties: {
                         id: { type: 'string' },
                         groupId: { type: 'string' },
@@ -301,7 +339,7 @@ export async function chatRoutes(fastify: FastifyInstance) {
       const { before, limit = 50 } = request.query as { before?: string; limit?: number };
       const result = await chatService.getGroupChatHistory(groupId, limit, before);
       return { success: true, data: result };
-    }
+    },
   );
 
   // POST /api/v1/chat/group/:groupId/send
@@ -354,9 +392,19 @@ export async function chatRoutes(fastify: FastifyInstance) {
     },
     async (request) => {
       const { groupId } = request.params as { groupId: string };
-      const { content, type = 'text', replyToId } = request.body as { content: string; type?: string; replyToId?: string };
-      const message = await chatService.sendGroupMessage(request.user.id, groupId, content, type, replyToId);
+      const {
+        content,
+        type = 'text',
+        replyToId,
+      } = request.body as { content: string; type?: string; replyToId?: string };
+      const message = await chatService.sendGroupMessage(
+        request.user.id,
+        groupId,
+        content,
+        type,
+        replyToId,
+      );
       return { success: true, data: message };
-    }
+    },
   );
 }

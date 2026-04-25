@@ -63,7 +63,7 @@ export async function friendsRoutes(fastify: FastifyInstance) {
       const { userId } = request.body as { userId: string };
       const friendship = await friendshipService.sendRequest(request.user.id, userId);
       return { success: true, data: friendship };
-    }
+    },
   );
 
   // PATCH /api/v1/friends/requests/:requestId - 处理好友请求
@@ -103,7 +103,7 @@ export async function friendsRoutes(fastify: FastifyInstance) {
       const { action } = request.body as { action: 'accept' | 'reject' };
       const friendship = await friendshipService.handleRequest(requestId, request.user.id, action);
       return { success: true, data: { id: friendship.id, status: friendship.status } };
-    }
+    },
   );
 
   // GET /api/v1/friends - 获取好友列表
@@ -114,7 +114,11 @@ export async function friendsRoutes(fastify: FastifyInstance) {
         querystring: {
           type: 'object',
           properties: {
-            status: { type: 'string', enum: ['ACCEPTED', 'PENDING', 'BLOCKED'], default: 'ACCEPTED' },
+            status: {
+              type: 'string',
+              enum: ['ACCEPTED', 'PENDING', 'BLOCKED'],
+              default: 'ACCEPTED',
+            },
           },
         },
         response: {
@@ -156,7 +160,7 @@ export async function friendsRoutes(fastify: FastifyInstance) {
       const { status = 'ACCEPTED' } = request.query as { status?: string };
       const friends = await friendshipService.getFriends(request.user.id, status);
       return { success: true, data: friends };
-    }
+    },
   );
 
   // DELETE /api/v1/friends/:friendshipId - 删除好友关系
@@ -183,7 +187,7 @@ export async function friendsRoutes(fastify: FastifyInstance) {
         throw fastify.httpErrors.notFound('Friendship not found');
       }
       return { success: true, message: 'Friend removed' };
-    }
+    },
   );
 
   // GET /api/v1/friends/requests/incoming - 获取收到的好友请求
@@ -228,6 +232,6 @@ export async function friendsRoutes(fastify: FastifyInstance) {
     async (request) => {
       const requests = await friendshipService.getIncomingRequests(request.user.id);
       return { success: true, data: requests };
-    }
+    },
   );
 }

@@ -38,7 +38,15 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                 properties: {
                   group: {
                     type: 'object',
-                    required: ['id', 'name', 'ownerId', 'isPublic', 'inviteCode', 'maxMembers', 'createdAt'],
+                    required: [
+                      'id',
+                      'name',
+                      'ownerId',
+                      'isPublic',
+                      'inviteCode',
+                      'maxMembers',
+                      'createdAt',
+                    ],
                     properties: {
                       id: { type: 'string' },
                       name: { type: 'string' },
@@ -74,7 +82,19 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const { name, description, isPublic = false, initialMemberIds = [], avatar } = request.body as { name: string; description?: string; isPublic?: boolean; initialMemberIds?: string[]; avatar?: string };
+      const {
+        name,
+        description,
+        isPublic = false,
+        initialMemberIds = [],
+        avatar,
+      } = request.body as {
+        name: string;
+        description?: string;
+        isPublic?: boolean;
+        initialMemberIds?: string[];
+        avatar?: string;
+      };
       const group = await groupService.createGroup(request.user.id, {
         name,
         description,
@@ -83,7 +103,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
         avatar,
       });
       return { success: true, data: group };
-    }
+    },
   );
 
   // GET /api/v1/groups - 获取群组列表
@@ -145,7 +165,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       // default: joined
       const groups = await groupService.getMyGroups(request.user.id);
       return { success: true, data: groups };
-    }
+    },
   );
 
   // GET /api/v1/groups/:groupId - 获取群组详情
@@ -192,7 +212,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       const { groupId } = request.params as { groupId: string };
       const group = await groupService.getGroupById(groupId, request.user.id);
       return { success: true, data: group };
-    }
+    },
   );
 
   // POST /api/v1/groups/:groupId/invite - 邀请成员
@@ -220,7 +240,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       const { userId } = request.body as { userId: string };
       await groupService.inviteMember(groupId, request.user.id, userId);
       return { success: true, message: 'Invitation sent' };
-    }
+    },
   );
 
   // POST /api/v1/groups/join - 使用邀请码加入
@@ -259,7 +279,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       const { inviteCode } = request.body as { inviteCode: string };
       const result = await groupService.joinWithInviteCode(request.user.id, inviteCode);
       return { success: true, data: result };
-    }
+    },
   );
 
   // PATCH /api/v1/groups/:groupId/members/:userId - 修改成员权限
@@ -283,11 +303,19 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const { groupId, userId: targetUserId } = request.params as { groupId: string; userId: string };
+      const { groupId, userId: targetUserId } = request.params as {
+        groupId: string;
+        userId: string;
+      };
       const { action } = request.body as { action: 'kick' | 'promote' | 'demote' };
-      const result = await groupService.updateMemberRole(groupId, request.user.id, targetUserId, action);
+      const result = await groupService.updateMemberRole(
+        groupId,
+        request.user.id,
+        targetUserId,
+        action,
+      );
       return { success: true, message: result.message };
-    }
+    },
   );
 
   // POST /api/v1/groups/:groupId/leave - 退出群组
@@ -323,6 +351,6 @@ export async function groupsRoutes(fastify: FastifyInstance) {
       });
 
       return { success: true, message: 'Left group' };
-    }
+    },
   );
 }

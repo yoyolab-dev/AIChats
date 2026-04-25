@@ -40,8 +40,12 @@ export class FriendshipService {
         status: 'PENDING',
       },
       include: {
-        user: { select: { id: true, username: true, nickname: true, avatar: true, isOnline: true } },
-        friend: { select: { id: true, username: true, nickname: true, avatar: true, isOnline: true } },
+        user: {
+          select: { id: true, username: true, nickname: true, avatar: true, isOnline: true },
+        },
+        friend: {
+          select: { id: true, username: true, nickname: true, avatar: true, isOnline: true },
+        },
       },
     });
 
@@ -51,7 +55,11 @@ export class FriendshipService {
   /**
    * 处理好友请求（接受/拒绝/屏蔽）
    */
-  async handleRequest(friendshipId: string, currentUserId: string, action: 'accept' | 'reject' | 'block') {
+  async handleRequest(
+    friendshipId: string,
+    currentUserId: string,
+    action: 'accept' | 'reject' | 'block',
+  ) {
     const friendship = await prisma.friendship.findUnique({
       where: { id: friendshipId },
       include: { user: true, friend: true },

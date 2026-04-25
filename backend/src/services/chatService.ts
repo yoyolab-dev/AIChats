@@ -11,7 +11,12 @@ export class ChatService {
    * @param limit 每页数量 (默认50)
    * @param before 拉取此时间之前的消息 (ISO 8601)
    */
-  async getPrivateChatHistory(currentUserId: string, friendId: string, limit: number = 50, before?: string) {
+  async getPrivateChatHistory(
+    currentUserId: string,
+    friendId: string,
+    limit: number = 50,
+    before?: string,
+  ) {
     // 1. 校验好友关系
     const friendship = await prisma.friendship.findFirst({
       where: {
@@ -84,7 +89,13 @@ export class ChatService {
   /**
    * 发送私聊消息
    */
-  async sendPrivateMessage(senderId: string, receiverId: string, content: string, type: string = 'text', replyToId?: string) {
+  async sendPrivateMessage(
+    senderId: string,
+    receiverId: string,
+    content: string,
+    type: string = 'text',
+    replyToId?: string,
+  ) {
     // 校验好友关系
     const friendship = await prisma.friendship.findFirst({
       where: {
@@ -206,7 +217,13 @@ export class ChatService {
   /**
    * 发送群聊消息
    */
-  async sendGroupMessage(senderId: string, groupId: string, content: string, type: string = 'text', replyToId?: string) {
+  async sendGroupMessage(
+    senderId: string,
+    groupId: string,
+    content: string,
+    type: string = 'text',
+    replyToId?: string,
+  ) {
     // 验证用户是群成员
     const membership = await prisma.groupMember.findFirst({
       where: { groupId, userId: senderId },
@@ -250,7 +267,7 @@ export class ChatService {
       where: { groupId },
       select: { userId: true },
     });
-    const memberIds = groupMembers.map(m => m.userId).filter(id => id !== senderId);
+    const memberIds = groupMembers.map((m) => m.userId).filter((id) => id !== senderId);
 
     const payload = {
       type: 'group_message',

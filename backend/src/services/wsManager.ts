@@ -29,7 +29,7 @@ class WebSocketManager {
   unregister(userId: string, ws: any) {
     const userConnections = this.connections.get(userId);
     if (userConnections) {
-      const index = userConnections.findIndex(c => c.ws === ws);
+      const index = userConnections.findIndex((c) => c.ws === ws);
       if (index > -1) {
         userConnections.splice(index, 1);
       }
@@ -37,7 +37,9 @@ class WebSocketManager {
         this.connections.delete(userId);
       }
     }
-    console.log(`[WS] User ${userId} disconnected. Total connections: ${this.getTotalConnections()}`);
+    console.log(
+      `[WS] User ${userId} disconnected. Total connections: ${this.getTotalConnections()}`,
+    );
   }
 
   /**
@@ -46,7 +48,7 @@ class WebSocketManager {
   updatePong(userId: string, ws: any) {
     const userConnections = this.connections.get(userId);
     if (userConnections) {
-      const conn = userConnections.find(c => c.ws === ws);
+      const conn = userConnections.find((c) => c.ws === ws);
       if (conn) {
         conn.lastPong = Date.now();
       }
@@ -61,7 +63,7 @@ class WebSocketManager {
     const timedOut: { userId: string; ws: any }[] = [];
 
     this.connections.forEach((conns, userId) => {
-      conns.forEach(conn => {
+      conns.forEach((conn) => {
         if (now - conn.lastPong > timeoutMs) {
           timedOut.push({ userId, ws: conn.ws });
         }
@@ -91,8 +93,9 @@ class WebSocketManager {
     }
 
     const payload = JSON.stringify(message);
-    userConnections.forEach(conn => {
-      if (conn.ws.readyState === 1) { // OPEN
+    userConnections.forEach((conn) => {
+      if (conn.ws.readyState === 1) {
+        // OPEN
         conn.ws.send(payload);
       }
     });
@@ -106,7 +109,7 @@ class WebSocketManager {
     const payload = JSON.stringify(message);
     this.connections.forEach((conns, userId) => {
       if (userId !== excludeUserId) {
-        conns.forEach(conn => {
+        conns.forEach((conn) => {
           if (conn.ws.readyState === 1) {
             conn.ws.send(payload);
           }
@@ -120,7 +123,7 @@ class WebSocketManager {
    */
   getTotalConnections(): number {
     let total = 0;
-    this.connections.forEach(conns => {
+    this.connections.forEach((conns) => {
       total += conns.length;
     });
     return total;

@@ -64,7 +64,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
       const { username, nickname } = request.body as { username: string; nickname?: string };
       const user = await userService.register({ username, nickname });
       return { success: true, data: user };
-    }
+    },
   );
 
   // GET /api/v1/users/me
@@ -100,7 +100,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
     async (request) => {
       const user = await userService.getUserById(request.user.id);
       return { success: true, data: user };
-    }
+    },
   );
 
   // PATCH /api/v1/users/me
@@ -122,7 +122,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
       const { nickname, avatar } = request.body as { nickname?: string; avatar?: string };
       const user = await userService.updateUser(request.user.id, { nickname, avatar });
       return { success: true, data: user };
-    }
+    },
   );
 
   // GET /api/v1/users/search
@@ -168,7 +168,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
       const { q, limit = 20 } = request.query as { q: string; limit?: number };
       const users = await userService.searchUsers(q, request.user.id, limit);
       return { success: true, data: users };
-    }
+    },
   );
 
   // GET /api/v1/admin/users
@@ -235,9 +235,19 @@ export async function usersRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { page = 1, limit = 20, role, search } = request.query as z.infer<typeof paginationSchema>;
-      const result = await userService.getAllUsers({ page, limit, role: role as Role | undefined, search });
+      const {
+        page = 1,
+        limit = 20,
+        role,
+        search,
+      } = request.query as z.infer<typeof paginationSchema>;
+      const result = await userService.getAllUsers({
+        page,
+        limit,
+        role: role as Role | undefined,
+        search,
+      });
       return { success: true, data: result };
-    }
+    },
   );
 }

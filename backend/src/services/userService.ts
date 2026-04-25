@@ -95,13 +95,8 @@ export class UserService {
     return user;
   }
 
-  async getAllUsers(params: {
-    page?: number;
-    limit?: number;
-    role?: Role;
-    search?: string;
-  }) {
-        const { page = 1, limit = 20, role, search } = params;
+  async getAllUsers(params: { page?: number; limit?: number; role?: Role; search?: string }) {
+    const { page = 1, limit = 20, role, search } = params;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -111,10 +106,7 @@ export class UserService {
     }
 
     if (search) {
-      where.OR = [
-        { username: { contains: search } },
-        { nickname: { contains: search } },
-      ];
+      where.OR = [{ username: { contains: search } }, { nickname: { contains: search } }];
     }
 
     const [users, total] = await Promise.all([
@@ -173,10 +165,7 @@ export class UserService {
         AND: [
           { id: { not: excludeUserId } },
           {
-            OR: [
-              { username: { contains: keyword } },
-              { nickname: { contains: keyword } },
-            ],
+            OR: [{ username: { contains: keyword } }, { nickname: { contains: keyword } }],
           },
         ],
       },

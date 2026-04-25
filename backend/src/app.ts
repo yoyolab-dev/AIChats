@@ -146,20 +146,20 @@ export { buildApp };
 // 非测试环境才启动服务器
 if (process.env.NODE_ENV !== 'test') {
   buildApp()
-  .then((app) => {
-    const port = parseInt(process.env.PORT || '8200', 10);
-    const host = process.env.HOST || '0.0.0.0';
+    .then((app) => {
+      const port = parseInt(process.env.PORT || '8200', 10);
+      const host = process.env.HOST || '0.0.0.0';
 
-    app.listen({ port, host }, (err, address) => {
-      if (err) {
-        app.log.error(err);
-        process.exit(1);
-      }
-      console.log(`🚀 Server listening at ${address}`);
+      app.listen({ port, host }, (err, address) => {
+        if (err) {
+          app.log.error(err);
+          process.exit(1);
+        }
+        console.log(`🚀 Server listening at ${address}`);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to start server:', err);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error('Failed to start server:', err);
-    process.exit(1);
-  });
 }

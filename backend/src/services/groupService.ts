@@ -6,7 +6,16 @@ export class GroupService {
   /**
    * 创建群组
    */
-  async createGroup(ownerId: string, data: { name: string; description?: string; isPublic?: boolean; initialMemberIds?: string[]; avatar?: string }) {
+  async createGroup(
+    ownerId: string,
+    data: {
+      name: string;
+      description?: string;
+      isPublic?: boolean;
+      initialMemberIds?: string[];
+      avatar?: string;
+    },
+  ) {
     const { name, description, isPublic = false, initialMemberIds = [] } = data;
 
     // 生成邀请码 (仅私密群)
@@ -115,7 +124,7 @@ export class GroupService {
     }
 
     // 格式化成员列表
-    const formattedMembers = group.members.map(m => ({
+    const formattedMembers = group.members.map((m) => ({
       userId: m.user.id,
       username: m.user.username,
       nickname: m.user.nickname,
@@ -136,7 +145,7 @@ export class GroupService {
       maxMembers: group.maxMembers,
       createdAt: group.createdAt,
       updatedAt: group.updatedAt,
-      myRole: viewerId ? (await this.getUserRoleInGroup(groupId, viewerId)) : null,
+      myRole: viewerId ? await this.getUserRoleInGroup(groupId, viewerId) : null,
       memberCount: formattedMembers.length,
       members: formattedMembers,
     };
@@ -200,7 +209,7 @@ export class GroupService {
         createdAt: g.createdAt,
         updatedAt: g.updatedAt,
         memberCount: await prisma.groupMember.count({ where: { groupId: g.id } }),
-      }))
+      })),
     );
   }
 
@@ -226,7 +235,7 @@ export class GroupService {
       groups.map(async (g) => ({
         ...g,
         memberCount: await prisma.groupMember.count({ where: { groupId: g.id } }),
-      }))
+      })),
     );
   }
 
@@ -315,7 +324,12 @@ export class GroupService {
   /**
    * 修改成员角色
    */
-  async updateMemberRole(groupId: string, actorId: string, targetUserId: string, action: 'promote' | 'demote' | 'kick') {
+  async updateMemberRole(
+    groupId: string,
+    actorId: string,
+    targetUserId: string,
+    action: 'promote' | 'demote' | 'kick',
+  ) {
     // 查询操作者角色
     const actor = await prisma.groupMember.findFirst({
       where: { groupId, userId: actorId },
