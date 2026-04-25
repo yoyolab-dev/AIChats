@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { GroupService } from '@/services/groupService';
+import { GroupService } from '../services/groupService';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 

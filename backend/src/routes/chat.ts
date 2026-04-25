@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { ChatService } from '@/services/chatService';
+import { ChatService } from '../services/chatService';
 
 export async function chatRoutes(fastify: FastifyInstance) {
   const chatService = new ChatService();

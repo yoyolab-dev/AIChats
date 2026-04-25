@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import { generateApiKey } from '@/utils/apiKey';
-import type { RegisterUserDto, UpdateUserDto, Role } from '@/types/user';
+import { generateApiKey } from '../utils/apiKey';
+import type { RegisterUserDto, UpdateUserDto, Role } from '../types/user';
 
 const prisma = new PrismaClient();
 

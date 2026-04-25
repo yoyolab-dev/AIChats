@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { UserService } from '@/services/userService';
-import type { Role } from '@/types/user';
+import { UserService } from '../services/userService';
+import type { Role } from '../types/user';
 
 // Zod schemas for runtime validation
 const registerSchema = z.object({

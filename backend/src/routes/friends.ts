@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { FriendshipService } from '@/services/friendshipService';
+import { FriendshipService } from '../services/friendshipService';
 
 export async function friendsRoutes(fastify: FastifyInstance) {
   const friendshipService = new FriendshipService();

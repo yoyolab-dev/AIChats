@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import { validateApiKeyFormat } from '@/utils/apiKey';
-import type { FastifyRequestUser, Role } from '@/types/user';
+import { validateApiKeyFormat } from '../utils/apiKey';
+import type { FastifyRequestUser, Role } from '../types/user';
 
 declare module 'fastify' {
   interface FastifyRequest {

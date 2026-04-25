@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { AdminService } from '@/services/adminService';
+import { AdminService } from '../services/adminService';
 
 export async function adminRoutes(fastify: FastifyInstance) {
   const adminService = new AdminService();
