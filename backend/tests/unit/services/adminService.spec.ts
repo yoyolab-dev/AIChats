@@ -36,7 +36,10 @@ describe('AdminService', () => {
       const result = await new AdminService().banUser('admin-1', 'user-2', 'Test reason');
 
       expect(result.success).toBe(true);
-      expect(_prisma.user.update).toHaveBeenCalledWith({ where: { id: 'user-2' }, data: { isBanned: true } });
+      expect(_prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-2' },
+        data: { isBanned: true },
+      });
     });
 
     it('should throw error if admin does not exist', async () => {
@@ -53,7 +56,9 @@ describe('AdminService', () => {
 
     it('should throw error if trying to ban self', async () => {
       _prisma.user.findUnique.mockResolvedValue({ id: 'admin-1', role: 'ADMIN' });
-      await expect(new AdminService().banUser('admin-1', 'admin-1')).rejects.toThrow('Cannot ban self');
+      await expect(new AdminService().banUser('admin-1', 'admin-1')).rejects.toThrow(
+        'Cannot ban self',
+      );
     });
   });
 
@@ -66,13 +71,18 @@ describe('AdminService', () => {
       const result = await new AdminService().unbanUser('admin-1', 'user-2');
 
       expect(result.success).toBe(true);
-      expect(_prisma.user.update).toHaveBeenCalledWith({ where: { id: 'user-2' }, data: { isBanned: false } });
+      expect(_prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-2' },
+        data: { isBanned: false },
+      });
     });
 
     it('should throw error if not admin', async () => {
       _prisma.user.findUnique.mockResolvedValueOnce({ id: 'admin-1', role: 'USER' });
       // Second call would be target user; but since first throws, second won't be reached
-      await expect(new AdminService().unbanUser('admin-1', 'user-2')).rejects.toThrow('Unauthorized');
+      await expect(new AdminService().unbanUser('admin-1', 'user-2')).rejects.toThrow(
+        'Unauthorized',
+      );
     });
   });
 
@@ -115,13 +125,17 @@ describe('AdminService', () => {
       _prisma.message.findUnique.mockResolvedValue(null);
       _prisma.groupMessage.findUnique.mockResolvedValue(null);
 
-      await expect(new AdminService().deleteMessage('admin-1', 'nonexistent')).rejects.toThrow('Message not found');
+      await expect(new AdminService().deleteMessage('admin-1', 'nonexistent')).rejects.toThrow(
+        'Message not found',
+      );
     });
 
     it('should throw error if not admin', async () => {
       _prisma.user.findUnique.mockResolvedValue({ id: 'admin-1', role: 'USER' });
       _prisma.message.findUnique.mockResolvedValue({} as any);
-      await expect(new AdminService().deleteMessage('admin-1', 'msg-123')).rejects.toThrow('Unauthorized');
+      await expect(new AdminService().deleteMessage('admin-1', 'msg-123')).rejects.toThrow(
+        'Unauthorized',
+      );
     });
   });
 
@@ -139,7 +153,7 @@ describe('AdminService', () => {
       _prisma.group.count.mockResolvedValue(10);
       _prisma.message.count
         .mockResolvedValueOnce(1000) // messageCount (first call)
-        .mockResolvedValueOnce(0);    // second call (unused)
+        .mockResolvedValueOnce(0); // second call (unused)
       _prisma.groupMessage.count.mockResolvedValue(2000); // privateMsgCount
 
       const stats = await new AdminService().getStats();
@@ -148,13 +162,9 @@ describe('AdminService', () => {
     });
 
     it('should count messages correctly (500 + 300 = 800)', async () => {
-      _prisma.user.count
-        .mockResolvedValueOnce(50)
-        .mockResolvedValueOnce(20);
+      _prisma.user.count.mockResolvedValueOnce(50).mockResolvedValueOnce(20);
       _prisma.group.count.mockResolvedValue(5);
-      _prisma.message.count
-        .mockResolvedValueOnce(500)
-        .mockResolvedValueOnce(0);
+      _prisma.message.count.mockResolvedValueOnce(500).mockResolvedValueOnce(0);
       _prisma.groupMessage.count.mockResolvedValue(300);
 
       const stats = await new AdminService().getStats();

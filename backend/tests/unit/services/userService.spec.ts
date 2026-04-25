@@ -45,7 +45,10 @@ describe('UserService', () => {
       _prisma.user.findFirst.mockResolvedValue(null);
       _prisma.user.create.mockResolvedValue(mockUser);
 
-      const result = await new UserService().register({ username: 'testuser', nickname: 'Test User' });
+      const result = await new UserService().register({
+        username: 'testuser',
+        nickname: 'Test User',
+      });
 
       expect(result).toEqual(mockUser);
       expect(_prisma.user.findFirst).toHaveBeenCalledWith({
@@ -75,7 +78,9 @@ describe('UserService', () => {
         username: 'testuser',
       });
 
-      await expect(new UserService().register({ username: 'testuser' })).rejects.toThrow('Username already exists');
+      await expect(new UserService().register({ username: 'testuser' })).rejects.toThrow(
+        'Username already exists',
+      );
     });
 
     it('should use username as nickname if not provided', async () => {
@@ -208,7 +213,9 @@ describe('UserService', () => {
 
       _prisma.user.update.mockResolvedValue(mockUser);
 
-      const result = await new UserService().updateUser('user-123', { avatar: 'https://example.com/avatar.jpg' });
+      const result = await new UserService().updateUser('user-123', {
+        avatar: 'https://example.com/avatar.jpg',
+      });
 
       expect(result).toEqual(mockUser);
       expect(_prisma.user.update).toHaveBeenCalledWith({
@@ -337,10 +344,7 @@ describe('UserService', () => {
 
       expect(_prisma.user.findMany).toHaveBeenCalledWith({
         where: {
-          OR: [
-            { username: { contains: 'john' } },
-            { nickname: { contains: 'john' } },
-          ],
+          OR: [{ username: { contains: 'john' } }, { nickname: { contains: 'john' } }],
         },
         skip: 0,
         take: 20,
@@ -461,10 +465,7 @@ describe('UserService', () => {
           AND: [
             { id: { not: 'current-user-id' } },
             {
-              OR: [
-                { username: { contains: 'john' } },
-                { nickname: { contains: 'john' } },
-              ],
+              OR: [{ username: { contains: 'john' } }, { nickname: { contains: 'john' } }],
             },
           ],
         },
@@ -504,10 +505,7 @@ describe('UserService', () => {
           AND: [
             { id: { not: 'exclude-me' } },
             {
-              OR: [
-                { username: { contains: 'john' } },
-                { nickname: { contains: 'john' } },
-              ],
+              OR: [{ username: { contains: 'john' } }, { nickname: { contains: 'john' } }],
             },
           ],
         },
