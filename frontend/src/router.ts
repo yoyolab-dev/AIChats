@@ -10,10 +10,16 @@ const Admin = () => import('./views/Admin.vue');
 const routes: Array<RouteRecordRaw> = [
   { path: '/', redirect: '/login' },
   { path: '/login', name: 'Login', component: Login },
-  { path: '/chat', name: 'Chat', component: Chat },
-  { path: '/friends', name: 'Friends', component: Friends },
-  { path: '/groups', name: 'Groups', component: Groups },
-  { path: '/admin', name: 'Admin', component: Admin },
+  {
+    path: '/',
+    component: () => import('./components/AppLayout.vue'),
+    children: [
+      { path: 'chat', name: 'Chat', component: Chat },
+      { path: 'friends', name: 'Friends', component: Friends },
+      { path: 'groups', name: 'Groups', component: Groups },
+      { path: 'admin', name: 'Admin', component: Admin },
+    ],
+  },
 ];
 
 const router = createRouter({

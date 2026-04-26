@@ -85,7 +85,7 @@ async function loadFriends() {
     const res = await api.getFriends()
     friends.value = res.friends
   } catch (e: any) {
-    console.error(e)
+    message.error(e.message || 'Failed to load friends')
   }
 }
 

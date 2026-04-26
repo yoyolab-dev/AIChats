@@ -1,3 +1,7 @@
+import pino from 'pino';
+
+const logger = pino({ name: 'ws-manager' });
+
 type Connection = {
   userId: string;
   ws: any; // WebSocket 实例
@@ -20,7 +24,7 @@ class WebSocketManager {
       lastPong: Date.now(),
     });
 
-    console.log(`[WS] User ${userId} connected. Total connections: ${this.getTotalConnections()}`);
+    logger.info({ userId, totalConnections: this.getTotalConnections() }, 'User connected');
   }
 
   /**
@@ -37,9 +41,7 @@ class WebSocketManager {
         this.connections.delete(userId);
       }
     }
-    console.log(
-      `[WS] User ${userId} disconnected. Total connections: ${this.getTotalConnections()}`,
-    );
+    logger.info({ userId, totalConnections: this.getTotalConnections() }, 'User disconnected');
   }
 
   /**
@@ -71,7 +73,7 @@ class WebSocketManager {
     });
 
     timedOut.forEach(({ userId, ws }) => {
-      console.log(`[WS] Connection timeout: ${userId}`);
+      logger.warn({ userId }, 'Connection timeout');
       this.unregister(userId, ws);
       try {
         ws.terminate();

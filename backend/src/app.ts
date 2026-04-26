@@ -155,7 +155,7 @@ if (process.env.NODE_ENV !== 'test') {
           app.log.error(err);
           process.exit(1);
         }
-        console.log(`🚀 Server listening at ${address}`);
+        app.log.info(`🚀 Server listening at ${address}`);
       });
     })
     .catch((err) => {
