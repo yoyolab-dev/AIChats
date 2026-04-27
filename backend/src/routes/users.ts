@@ -167,7 +167,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
     async (request) => {
       const { q, limit = 20 } = request.query as { q: string; limit?: number };
       const users = await userService.searchUsers(q, request.user.id, limit);
-      return { success: true, data: users };
+      return { success: true, data: { users } };
     },
   );
 

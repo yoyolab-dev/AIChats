@@ -159,7 +159,7 @@ export async function friendsRoutes(fastify: FastifyInstance) {
     async (request) => {
       const { status = 'ACCEPTED' } = request.query as { status?: string };
       const friends = await friendshipService.getFriends(request.user.id, status);
-      return { success: true, data: friends };
+      return { success: true, data: { friends } };
     },
   );
 
