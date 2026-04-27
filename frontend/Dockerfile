@@ -1,10 +1,11 @@
 # Build stage
 FROM node:20-alpine AS builder
+ARG VITE_API_BASE_URL=https://api.oujun.work
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+RUN VITE_API_BASE_URL=${VITE_API_BASE_URL} npm run build
 
 # Production stage
 FROM nginx:alpine

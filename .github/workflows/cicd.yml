@@ -78,6 +78,8 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           no-cache: true
+          build-args: |
+            VITE_API_BASE_URL=https://api.oujun.work
           tags: |
             ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAME_SPACE }}/aichats-frontend:latest
 
