@@ -58,12 +58,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api/client'
 import { useMessage } from 'naive-ui'
 
 const route = useRoute()
-const authStore = useAuthStore()
 const messageApi = useMessage()
 
 const friendId = computed(() => route.query.friend as string | undefined)

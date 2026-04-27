@@ -34,7 +34,7 @@ async function handleSubmit() {
   if (!form.value.username) return;
   try {
     const data = await api.register(form.value.username);
-    authStore.setAuth(data.apiKey, { username: data.username, role: data.role });
+    authStore.setAuth(data.apiKey, data.id, { username: data.username, role: data.role });
     message.success('Welcome!');
     router.push('/chat');
   } catch (e: any) {

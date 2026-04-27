@@ -52,7 +52,7 @@ const results = ref<any[]>([])
 const friends = ref<any[]>([])
 
 function isSelf(uid: string) {
-  return false // TODO: compare with authStore.id when available
+  return uid === authStore.userId
 }
 
 async function search() {
