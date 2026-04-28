@@ -4,7 +4,6 @@ import websocket from '@fastify/websocket';
 import rateLimit from '@fastify/rate-limit';
 import { config } from 'dotenv';
 import path from 'path';
-
 import { authPlugin } from './plugins/auth';
 import { adminPlugin } from './plugins/admin';
 import { wsManager } from './services/wsManager';
@@ -16,14 +15,12 @@ import { groupsRoutes } from './routes/groups';
 import { adminRoutes } from './routes/admin';
 
 // 全局暴露 WS 管理器 (供 metrics 使用)
-
 global.wsManager = wsManager;
 
 // 加载环境变量
 config();
 
 // CJS: __dirname is built-in
-
 async function buildApp() {
   const app = fastify({
     logger: {
@@ -36,18 +33,15 @@ async function buildApp() {
     origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'],
     credentials: true,
   });
-
   await app.register(websocket);
-
   await app.register(rateLimit, {
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
     timeWindow: process.env.RATE_LIMIT_WINDOW || '1 minute',
     keyGenerator: (req) => req.user?.id || req.ip,
   });
-
   await app.register(metricsPlugin);
-
   await app.register(authPlugin);
+
   // 装饰 authenticateAdmin 方法
   app.decorate('authenticateAdmin', async (request: any, reply: any) => {
     if (request.user?.role !== 'ADMIN') {
@@ -74,7 +68,6 @@ async function buildApp() {
       connection.socket.close(4001, 'Unauthorized');
       return;
     }
-
     wsManager.register(userId, connection.socket);
     connection.socket.send(JSON.stringify({ type: 'connected' }));
 
@@ -100,32 +93,46 @@ async function buildApp() {
   app.setNotFoundHandler((request, reply) => {
     reply.code(404).send({
       success: false,
-      error: { code: 1004, message: 'Resource not found' },
+      error: {
+        code: 1004,
+        message: 'Resource not found',
+      },
     });
   });
 
-  // 错误处理
-  app.setErrorHandler((error, request, reply) => {
+  // 错误处理 - Fastify 5.x 兼容
+  type ErrorWithStatus = Error & { statusCode?: number; name?: string };
+  app.setErrorHandler((error: ErrorWithStatus, request, reply) => {
     request.log.error(error);
 
     if (error.name === 'ZodError') {
       return reply.code(400).send({
         success: false,
-        error: { code: 1001, message: 'Validation error', details: error },
+        error: {
+          code: 1001,
+          message: 'Validation error',
+          details: error,
+        },
       });
     }
 
     if (error.statusCode) {
       return reply.code(error.statusCode).send({
         success: false,
-        error: { code: error.statusCode, message: error.message },
+        error: {
+          code: error.statusCode,
+          message: error.message,
+        },
       });
     }
 
     // 内部服务器错误
     reply.code(500).send({
       success: false,
-      error: { code: 1099, message: 'Internal server error' },
+      error: {
+        code: 1099,
+        message: 'Internal server error',
+      },
     });
   });
 
@@ -149,7 +156,6 @@ if (process.env.NODE_ENV !== 'test') {
     .then((app) => {
       const port = parseInt(process.env.PORT || '8200', 10);
       const host = process.env.HOST || '0.0.0.0';
-
       app.listen({ port, host }, (err, address) => {
         if (err) {
           app.log.error(err);
