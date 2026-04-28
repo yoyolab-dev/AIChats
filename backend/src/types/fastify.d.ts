@@ -5,6 +5,7 @@ import { Registry, Counter, Histogram, Gauge } from 'prom-client';
 declare module 'fastify' {
   interface FastifyInstance {
     httpErrors: HttpErrors;
+    authenticateAdmin: (request: any, reply: any) => Promise<void>;
     metrics: {
       registry: Registry;
       requestCounter: Counter;

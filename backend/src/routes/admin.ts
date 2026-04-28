@@ -9,11 +9,14 @@ export async function adminRoutes(fastify: FastifyInstance) {
   fastify.patch(
     '/api/v1/admin/users/:userId/ban',
     {
+      preHandler: [fastify.authenticateAdmin],
       schema: {
         body: {
           type: 'object',
           properties: {
-            reason: { type: 'string' },
+            reason: {
+              type: 'string',
+            },
           },
         },
         response: {
@@ -36,6 +39,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   fastify.patch(
     '/api/v1/admin/users/:userId/unban',
     {
+      preHandler: [fastify.authenticateAdmin],
       schema: {
         response: {
           200: {
@@ -56,6 +60,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   fastify.delete(
     '/api/v1/admin/messages/:messageId',
     {
+      preHandler: [fastify.authenticateAdmin],
       schema: {
         response: {
           200: {
@@ -76,6 +81,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/api/v1/admin/stats',
     {
+      preHandler: [fastify.authenticateAdmin],
       schema: {
         response: {
           200: {
