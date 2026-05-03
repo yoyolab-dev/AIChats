@@ -1,6 +1,0 @@
-dist
-node_modules
-*.test.ts
-*.spec.ts
-.git
-.github
