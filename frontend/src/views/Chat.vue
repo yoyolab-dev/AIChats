@@ -20,7 +20,7 @@
     </n-scrollbar>
 
     <n-space align="center">
-      <n-input v-model:value="input" placeholder="Type a message..." @keyup.enter="sendMessage" :disabled="sending" />
+      <n-input v-model:value="input" placeholder="Type a message..." :disabled="sending" @keyup.enter="sendMessage" />
       <n-button type="primary" :loading="sending" @click="sendMessage">Send</n-button>
     </n-space>
   </n-space>
@@ -47,7 +47,7 @@
     </n-scrollbar>
 
     <n-space align="center">
-      <n-input v-model:value="input" placeholder="Type a message..." @keyup.enter="sendMessage" :disabled="sending" />
+      <n-input v-model:value="input" placeholder="Type a message..." :disabled="sending" @keyup.enter="sendMessage" />
       <n-button type="primary" :loading="sending" @click="sendMessage">Send</n-button>
     </n-space>
   </n-space>
@@ -58,14 +58,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { api } from '@/api/client'
+import { api, API_BASE } from '@/api/client'
+import { useAuthStore } from '@/stores/auth'
 import { useMessage } from 'naive-ui'
 
 const route = useRoute()
 const messageApi = useMessage()
+const authStore = useAuthStore()
 
 const friendId = computed(() => route.query.friend as string | undefined)
 const groupId = computed(() => route.query.group as string | undefined)
+
 const myId = ref<string | null>(null)
 
 function formatTime(ts: string) {
@@ -75,7 +78,7 @@ function formatTime(ts: string) {
 
 const friendName = ref('Chat')
 const groupName = ref('Group')
-const messages = ref<any[]>([])
+const messages = ref<Array<{ id: string; content: string; senderId: string; createdAt: string; sender?: { username: string } }>>([])
 const input = ref('')
 const sending = ref(false)
 const ws = ref<WebSocket | null>(null)
@@ -95,8 +98,8 @@ async function loadPrivateHistory() {
     const res = await api.getPrivateHistory(friendId.value, 100)
     messages.value = res.messages.reverse()
     friendName.value = res.messages[0]?.sender?.username || 'Chat'
-  } catch (e: any) {
-    messageApi.error(e.message)
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Failed to load history')
   }
 }
 
@@ -113,8 +116,8 @@ async function loadGroupHistory() {
       // Fallback: could call getGroupDetail but skip for simplicity
       groupName.value = 'Group Chat'
     }
-  } catch (e: any) {
-    messageApi.error(e.message)
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Failed to load group messages')
   }
 }
 
@@ -125,14 +128,14 @@ async function sendMessage() {
   try {
     if (isGroupMode.value && groupId.value) {
       const msg = await api.sendGroupMessage(groupId.value, input.value.trim())
-      messages.value.push(msg)
+      messages.value.push(msg as unknown as { id: string; content: string; senderId: string; createdAt: string; sender?: { username: string } })
     } else if (friendId.value) {
       const msg = await api.sendPrivateMessage(friendId.value, input.value.trim())
-      messages.value.push(msg)
+      messages.value.push(msg as unknown as { id: string; content: string; senderId: string; createdAt: string; sender?: { username: string } })
     }
     input.value = ''
-  } catch (e: any) {
-    messageApi.error(e.message)
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Failed to send message')
   } finally {
     sending.value = false
   }
@@ -148,6 +151,20 @@ onMounted(() => {
   // 首次加载
   if (friendId.value) loadPrivateHistory()
   if (groupId.value) loadGroupHistory()
+
+  // WebSocket connection for real-time messages
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const wsUrl = `${protocol}//${new URL(API_BASE).host}/api/v1/ws?token=${authStore.apiKey}`
+  ws.value = new WebSocket(wsUrl)
+
+  ws.value.onmessage = (event) => {
+    const msg = JSON.parse(event.data)
+    if (isGroupMode.value && msg.groupId === groupId.value) {
+      messages.value.push(msg)
+    } else if (!isGroupMode.value && msg.senderId !== myId.value && msg.receiverId === myId.value) {
+      messages.value.push(msg)
+    }
+  }
 })
 
 onUnmounted(() => {
@@ -156,7 +173,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.sent { background-color: #e6f7ff; text-align: right; }
-.received { background-color: #f5f5f5; }
-.ml-2 { margin-left: 8px; }
+.sent {
+  background-color: #18a058;
+  color: white;
+}
+
+.received {
+  background-color: #f0f0f0;
+}
 </style>

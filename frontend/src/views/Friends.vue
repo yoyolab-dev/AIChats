@@ -3,7 +3,7 @@
     <!-- 搜索与添加好友 -->
     <n-card title="Find Users" size="small">
       <n-space>
-        <n-input v-model:value="query" placeholder="Enter username" @keyup.enter="search" clearable />
+        <n-input v-model:value="query" placeholder="Enter username" clearable @keyup.enter="search" />
         <n-button type="primary" :loading="searching" @click="search">Search</n-button>
       </n-space>
       <n-list v-if="results.length" bordered class="mt-2">
@@ -42,14 +42,29 @@ import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api/client'
 import { useMessage } from 'naive-ui'
 
+interface User {
+  id: string
+  username: string
+  nickname?: string | null
+}
+
+interface Friend {
+  id: string
+  username: string
+  nickname?: string | null
+  friendship: {
+    status: string
+    createdAt: string
+  }
+}
+
 const router = useRouter()
 const authStore = useAuthStore()
 const message = useMessage()
-
 const query = ref('')
 const searching = ref(false)
-const results = ref<any[]>([])
-const friends = ref<any[]>([])
+const results = ref<User[]>([])
+const friends = ref<Friend[]>([])
 
 function isSelf(uid: string) {
   return uid === authStore.userId
@@ -60,9 +75,9 @@ async function search() {
   searching.value = true
   try {
     const res = await api.searchUsers(query.value)
-    results.value = res.users.filter((u: any) => !isSelf(u.id))
-  } catch (e: any) {
-    message.error(e.message)
+    results.value = res.users.filter((u: User) => !isSelf(u.id))
+  } catch (e: unknown) {
+    message.error(e instanceof Error ? e.message : 'Search failed')
   } finally {
     searching.value = false
   }
@@ -75,8 +90,8 @@ async function sendRequest(userId: string) {
     query.value = ''
     results.value = []
     await loadFriends()
-  } catch (e: any) {
-    message.error(e.message)
+  } catch (e: unknown) {
+    message.error(e instanceof Error ? e.message : 'Failed to send request')
   }
 }
 
@@ -84,13 +99,12 @@ async function loadFriends() {
   try {
     const res = await api.getFriends()
     friends.value = res.friends
-  } catch (e: any) {
-    message.error(e.message || 'Failed to load friends')
+  } catch (e: unknown) {
+    message.error(e instanceof Error ? e.message : 'Failed to load friends')
   }
 }
 
 function openChat(friendId: string) {
-  // Navigate to chat page, pass selected friendId (could also use store)
   router.push({ path: '/chat', query: { friend: friendId } })
 }
 
@@ -100,6 +114,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.mt-2 { margin-top: 8px; }
-.ml-2 { margin-left: 8px; }
+.mt-2 {
+  margin-top: 8px;
+}
+.ml-2 {
+  margin-left: 8px;
+}
 </style>

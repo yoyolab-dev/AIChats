@@ -6,14 +6,14 @@
         <n-input v-model:value="newGroup.name" placeholder="Group name" />
         <n-input v-model:value="newGroup.description" placeholder="Description (optional)" type="textarea" />
         <n-checkbox v-model:checked="newGroup.isPublic">Public</n-checkbox>
-        <n-button type="primary" :loading="creating" @click="createGroup" :disabled="!newGroup.name.trim()">Create</n-button>
+        <n-button type="primary" :loading="creating" :disabled="!newGroup.name.trim()" @click="createGroup">Create</n-button>
       </n-space>
     </n-card>
 
     <!-- 群组列表 -->
     <n-card :title="listTitle" size="small">
       <n-space vertical>
-        <n-select v-model:value="listType" :options="typeOptions" @update:value="loadGroups" style="width: 200px;" />
+        <n-select v-model:value="listType" :options="typeOptions" style="width: 200px;" @update:value="loadGroups" />
         <n-list hoverable clickable bordered>
           <n-list-item v-for="g in groups" :key="g.id" @click="selectGroup(g)">
             <n-space align="center" justify="space-between">
@@ -21,7 +21,7 @@
                 <n-avatar round size="medium" :style="{ backgroundColor: '#ddd' }">{{ g.name[0].toUpperCase() }}</n-avatar>
                 <div>
                   <n-text strong>{{ g.name }}</n-text>
-                  <n-text depth="3" class="ml-2">{{ g.memberCount }} members</n-text>
+                  <n-text depth="3" class="ml-2">{{ g.memberCount ?? 0 }} members</n-text>
                   <n-text depth="3" class="ml-2">{{ g.isPublic ? '🌐 Public' : '🔒 Private' }}</n-text>
                 </div>
               </n-space>
@@ -53,7 +53,7 @@
         </n-scrollbar>
 
         <n-space align="center">
-          <n-input v-model:value="groupInput" placeholder="Send to group..." @keyup.enter="sendGroupMessage" />
+          <n-input v-model:value="groupInput" placeholder="Send to group..." :disabled="sending" @keyup.enter="sendGroupMessage" />
           <n-button type="primary" :loading="sending" @click="sendGroupMessage">Send</n-button>
         </n-space>
       </n-space>
@@ -65,7 +65,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { api } from '@/api/client'
+import { api, type Group, type Message } from '@/api/client'
 import { useMessage } from 'naive-ui'
 
 const router = useRouter()
@@ -74,17 +74,17 @@ const messageApi = useMessage()
 
 const newGroup = ref({ name: '', description: '', isPublic: false })
 const creating = ref(false)
-const groups = ref<any[]>([])
+const groups = ref<Group[]>([])
 const listType = ref<'joined' | 'public'>('joined')
 const typeOptions = [
   { label: 'My Groups', value: 'joined' as const },
   { label: 'Public Groups', value: 'public' as const },
 ]
-const selectedGroup = ref<any>(null)
-const messages = ref<any[]>([])
+const selectedGroup = ref<Group | null>(null)
+const messages = ref<Message[]>([])
 const groupInput = ref('')
 const sending = ref(false)
-const myId = ref('') // will be set when user data available
+const myId = ref<string | null>(null)
 
 function formatTime(ts: string) {
   const d = new Date(ts)
@@ -97,8 +97,8 @@ async function loadGroups() {
   try {
     const res = await api.getGroups(listType.value)
     groups.value = res
-  } catch (e: any) {
-    messageApi.error(e.message)
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Failed to load groups')
   }
 }
 
@@ -110,14 +110,14 @@ async function createGroup() {
     messageApi.success('Group created')
     newGroup.value = { name: '', description: '', isPublic: false }
     loadGroups()
-  } catch (e: any) {
-    messageApi.error(e.message)
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Failed to create group')
   } finally {
     creating.value = false
   }
 }
 
-async function selectGroup(g: any) {
+async function selectGroup(g: Group) {
   selectedGroup.value = g
   await loadGroupMessages(g.id)
 }
@@ -126,8 +126,8 @@ async function loadGroupMessages(groupId: string) {
   try {
     const res = await api.getGroupMessages(groupId, 50)
     messages.value = res.data.reverse()
-  } catch (e: any) {
-    messageApi.error(e.message)
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Failed to load messages')
   }
 }
 
@@ -138,21 +138,20 @@ async function sendGroupMessage() {
     const msg = await api.sendGroupMessage(selectedGroup.value.id, groupInput.value.trim())
     messages.value.push(msg)
     groupInput.value = ''
-  } catch (e: any) {
-    messageApi.error(e.message)
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Failed to send message')
   } finally {
     sending.value = false
   }
 }
 
 function openChat(groupId: string) {
-  // Navigate to chat with group context (could use separate group chat page)
   router.push({ path: '/chat', query: { group: groupId } })
 }
 
 onMounted(() => {
   loadGroups()
-  // myId could be set from authStore if we store full user object
+  myId.value = authStore.userId
 })
 </script>
 

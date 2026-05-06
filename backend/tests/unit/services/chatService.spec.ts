@@ -25,7 +25,7 @@ jest.mock('@prisma/client', () => {
 
 import { PrismaClient } from '@prisma/client';
 import { ChatService } from '@/services/chatService';
-const { wsManager } = require('@/services/wsManager');
+import { wsManager } from '@/services/wsManager';
 
 const MockPrisma = PrismaClient as jest.Mocked<typeof PrismaClient>;
 const prismaInstance = (MockPrisma as any).mock.results[0]?.value;

@@ -37,8 +37,8 @@ async function handleSubmit() {
     authStore.setAuth(data.apiKey, data.id, { username: data.username, role: data.role });
     message.success('Welcome!');
     router.push('/chat');
-  } catch (e: any) {
-    message.error(e?.message || 'Network error');
+  } catch (e: unknown) {
+    message.error(e instanceof Error ? e.message : 'Network error');
   }
 }
 </script>
