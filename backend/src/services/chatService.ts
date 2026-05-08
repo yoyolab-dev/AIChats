@@ -191,7 +191,7 @@ export class ChatService {
       ? await prisma.message.findMany({ where, select: { id: true } })
       : await prisma.message.findMany({ where, select: { id: true } });
 
-    const markedIds = messagesToMark.map(m => m.id);
+    const markedIds = (messagesToMark || []).map(m => m.id);
 
     const result = await prisma.message.updateMany({
       where,
