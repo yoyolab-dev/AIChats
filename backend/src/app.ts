@@ -6,6 +6,7 @@ import { config } from 'dotenv';
 import path from 'path';
 import { authPlugin } from './plugins/auth';
 import { adminPlugin } from './plugins/admin';
+import { uploadPlugin } from './plugins/upload';
 import { wsManager } from './services/wsManager';
 import { metricsPlugin } from './plugins/metrics';
 import { usersRoutes } from './routes/users';
@@ -33,7 +34,8 @@ async function buildApp() {
     origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'],
     credentials: true,
   });
-  await app.register(websocket);
+  await app.register(require('@fastify/websocket'));
+  await app.register(require('@fastify/multipart'));
   await app.register(rateLimit, {
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
     timeWindow: process.env.RATE_LIMIT_WINDOW || '1 minute',
@@ -41,6 +43,7 @@ async function buildApp() {
   });
   await app.register(metricsPlugin);
   await app.register(authPlugin);
+  await app.register(uploadPlugin);
 
   // 装饰 authenticateAdmin 方法
   app.decorate('authenticateAdmin', async (request: any, reply: any) => {

@@ -186,6 +186,13 @@ export class ChatService {
       where.id = { in: messageIds };
     }
 
+    // 记录被标记为已读的消息 ID，用于通知发送者
+    const messagesToMark = messageIds 
+      ? await prisma.message.findMany({ where, select: { id: true } })
+      : await prisma.message.findMany({ where, select: { id: true } });
+
+    const markedIds = messagesToMark.map(m => m.id);
+
     const result = await prisma.message.updateMany({
       where,
       data: {
@@ -193,6 +200,17 @@ export class ChatService {
         readAt: new Date(),
       },
     });
+
+    // 实时推送已读状态给发送者 (friendId)
+    if (markedIds.length > 0) {
+      wsManager.sendToUser(friendId, {
+        type: 'message_read',
+        payload: {
+          messageIds: markedIds,
+          readerId: userId,
+        },
+      });
+    }
 
     return result.count;
   }

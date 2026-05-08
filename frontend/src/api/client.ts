@@ -169,6 +169,26 @@ export const api = {
       query: { limit: limit?.toString() || '50', ...(before ? { before } : {}) },
     }),
 
+  // Upload
+  uploadFile: async (file: File) => {
+    const authStore = useAuthStore();
+    const url = `${API_BASE}/api/v1/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...(authStore.apiKey ? { Authorization: `Bearer ${authStore.apiKey}` } : {}),
+      },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok || data.success === false) {
+      throw new Error(data.error?.message || 'Upload failed');
+    }
+    return data.data as { url: string; filename: string; size: number; mimeType: string };
+  },
+
   // Admin
   getStats: () =>
     apiFetch<{ totalUsers: number; totalMessages: number; activeUsers: number }>('/api/v1/admin/stats'),

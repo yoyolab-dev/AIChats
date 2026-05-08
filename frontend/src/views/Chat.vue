@@ -10,16 +10,29 @@
       <n-space vertical>
         <div v-for="msg in messages" :key="msg.id" :style="{ textAlign: msg.senderId === myId ? 'right' : 'left' }">
           <n-card size="small" :class="msg.senderId === myId ? 'sent' : 'received'" hoverable>
-            <n-text>{{ msg.content }}</n-text>
-            <template #footer>
-              <n-text depth="3" :style="{ fontSize: '10px' }">{{ formatTime(msg.createdAt) }}</n-text>
-            </template>
+            <n-space vertical :size="2">
+              <n-image v-if="msg.type==='image'" :src="msg.content" style="max-width: 300px; border-radius: 8px;" object-fit="cover" />
+              <n-text v-else-if="msg.type==='file'">📄 {{ getFileName(msg.content) }}</n-text>
+              <n-text v-else>{{ msg.content }}</n-text>
+              <n-space justify="space-between" :size="8">
+                <n-text depth="3" :style="{ fontSize: '10px' }">{{ formatTime(msg.createdAt) }}</n-text>
+                <n-text v-if="msg.senderId === myId" depth="3" :style="{ fontSize: '10px' }">
+                  {{ msg.isRead ? '✓✓' : '✓' }}
+                </n-text>
+              </n-space>
+            </n-space>
           </n-card>
         </div>
       </n-space>
     </n-scrollbar>
 
     <n-space align="center">
+      <input type="file" ref="fileInput" style="display: none" @change="handleFileSelect" />
+      <n-button circle quaternary @click="triggerFileSelect">
+        <template #icon>
+          <n-icon><Attach /></n-icon>
+        </template>
+      </n-button>
       <n-input v-model:value="input" placeholder="Type a message..." :disabled="sending" @keyup.enter="sendMessage" />
       <n-button type="primary" :loading="sending" @click="sendMessage">Send</n-button>
     </n-space>
@@ -38,7 +51,9 @@
           <n-card size="small" :class="msg.senderId === myId ? 'sent' : 'received'" hoverable>
             <n-space vertical :size="2">
               <n-text depth="3">{{ msg.sender?.username }}</n-text>
-              <n-text>{{ msg.content }}</n-text>
+              <n-image v-if="msg.type==='image'" :src="msg.content" style="max-width: 300px; border-radius: 8px;" object-fit="cover" />
+              <n-text v-else-if="msg.type==='file'">📄 {{ getFileName(msg.content) }}</n-text>
+              <n-text v-else>{{ msg.content }}</n-text>
               <n-text depth="3" :style="{ fontSize: '10px' }">{{ formatTime(msg.createdAt) }}</n-text>
             </n-space>
           </n-card>
@@ -47,6 +62,12 @@
     </n-scrollbar>
 
     <n-space align="center">
+      <input type="file" ref="fileInput" style="display: none" @change="handleFileSelect" />
+      <n-button circle quaternary @click="triggerFileSelect">
+        <template #icon>
+          <n-icon><Attach /></n-icon>
+        </template>
+      </n-button>
       <n-input v-model:value="input" placeholder="Type a message..." :disabled="sending" @keyup.enter="sendMessage" />
       <n-button type="primary" :loading="sending" @click="sendMessage">Send</n-button>
     </n-space>
@@ -78,7 +99,14 @@ function formatTime(ts: string) {
 
 const friendName = ref('Chat')
 const groupName = ref('Group')
-const messages = ref<Array<{ id: string; content: string; senderId: string; createdAt: string; sender?: { username: string } }>>([])
+const messages = ref<Array<{ 
+  id: string; 
+  content: string; 
+  senderId: string; 
+  createdAt: string; 
+  isRead?: boolean; 
+  sender?: { username: string } 
+}>>([])
 const input = ref('')
 const sending = ref(false)
 const ws = ref<WebSocket | null>(null)
@@ -86,6 +114,44 @@ const ws = ref<WebSocket | null>(null)
 function closeWs() {
   if (ws.value) ws.value.close()
   ws.value = null
+}
+
+function triggerFileSelect() {
+  fileInput.value?.click()
+}
+
+function getFileName(url: string) {
+  try {
+    const path = new URL(url).pathname
+    return decodeURIComponent(path.split('/').pop() || 'file')
+  } catch {
+    return 'file'
+  }
+}
+
+async function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  uploading.value = true
+  try {
+    const uploadRes = await api.uploadFile(file)
+    // 决定消息类型：图片用 image，其他用 file
+    const type = file.type.startsWith('image/') ? 'image' : 'file'
+    const content = uploadRes.url
+    if (isGroupMode.value && groupId.value) {
+      const msg = await api.sendGroupMessage(groupId.value, content, type)
+      messages.value.push(msg as any)
+    } else if (friendId.value) {
+      const msg = await api.sendPrivateMessage(friendId.value, content, type)
+      messages.value.push(msg as any)
+    }
+  } catch (e: unknown) {
+    messageApi.error(e instanceof Error ? e.message : 'Upload failed')
+  } finally {
+    uploading.value = false
+    target.value = ''
+  }
 }
 
 // 判断模式
@@ -148,6 +214,7 @@ watch([friendId, groupId], () => {
 })
 
 onMounted(() => {
+  myId.value = authStore.userId || null;
   // 首次加载
   if (friendId.value) loadPrivateHistory()
   if (groupId.value) loadGroupHistory()
@@ -159,10 +226,23 @@ onMounted(() => {
 
   ws.value.onmessage = (event) => {
     const msg = JSON.parse(event.data)
-    if (isGroupMode.value && msg.groupId === groupId.value) {
-      messages.value.push(msg)
-    } else if (!isGroupMode.value && msg.senderId !== myId.value && msg.receiverId === myId.value) {
-      messages.value.push(msg)
+    
+    // 处理已读同步事件
+    if (msg.type === 'message_read') {
+      const { messageIds } = msg.payload;
+      messages.value.forEach(m => {
+        if (messageIds.includes(m.id)) {
+          m.isRead = true;
+        }
+      });
+      return;
+    }
+
+    // 处理新消息
+    if (isGroupMode.value && msg.payload?.groupId === groupId.value) {
+      messages.value.push(msg.payload.message as any)
+    } else if (!isGroupMode.value && msg.payload?.message && msg.payload.message.senderId !== myId.value && msg.payload.message.receiverId === myId.value) {
+      messages.value.push(msg.payload.message as any)
     }
   }
 })
