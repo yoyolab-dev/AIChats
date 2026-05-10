@@ -82,6 +82,7 @@ import { useRoute } from 'vue-router'
 import { api, API_BASE } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useMessage } from 'naive-ui'
+import { Attach } from '@vicons/ionicons5'
 
 const route = useRoute()
 const messageApi = useMessage()
@@ -104,11 +105,13 @@ const messages = ref<Array<{
   content: string; 
   senderId: string; 
   createdAt: string; 
-  isRead?: boolean; 
+  isRead?: boolean; type?: string; 
   sender?: { username: string } 
 }>>([])
 const input = ref('')
 const sending = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+const uploading = ref(false)
 const ws = ref<WebSocket | null>(null)
 
 function closeWs() {
