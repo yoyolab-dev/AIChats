@@ -13,12 +13,12 @@ export async function uploadPlugin(fastify: FastifyInstance) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  // 注册 multipart 插件
-  fastify.register(multipart, {
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB 限制
-    },
-  });
+  // 注册 multipart 插件 (已在 app.ts 中注册)
+  // fastify.register(multipart, {
+  //   limits: {
+  //     fileSize: 10 * 1024 * 1024, // 10MB 限制
+  //   },
+  // });
 
   // 注册静态资源服务，使上传的文件可以通过 URL 访问
   fastify.register(fastifyStatic, {
